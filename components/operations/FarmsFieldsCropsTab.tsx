@@ -22,7 +22,7 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
     crop: '',
   });
 
-  const { farms, fields, crops, addFarm, addField, addCrop, deleteFarm, deleteField, deleteCrop } = operationsData;
+  const { farms, fields, crops, addFarm, addField } = operationsData;
 
   const handleAddFarm = async () => {
     if (!formData.name || !formData.area || !formData.location) {
@@ -62,36 +62,6 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
       setFormData({ name: '', area: '', location: '', farmId: '', fieldId: '', variety: '', soilType: '', crop: '' });
       Alert.alert('Success', 'Field added successfully');
     }
-  };
-
-  const handleDeleteFarm = (id: number) => {
-    Alert.alert('Delete Farm', 'Are you sure you want to delete this farm?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        await deleteFarm(id);
-        Alert.alert('Deleted', 'Farm deleted successfully');
-      }},
-    ]);
-  };
-
-  const handleDeleteField = (id: number) => {
-    Alert.alert('Delete Field', 'Are you sure you want to delete this field?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        await deleteField(id);
-        Alert.alert('Deleted', 'Field deleted successfully');
-      }},
-    ]);
-  };
-
-  const handleDeleteCrop = (id: number) => {
-    Alert.alert('Delete Crop', 'Are you sure you want to delete this crop?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        await deleteCrop(id);
-        Alert.alert('Deleted', 'Crop deleted successfully');
-      }},
-    ]);
   };
 
   const farmOptions = farms.map((farm: any) => ({ label: farm.name, value: farm.id.toString() }));
@@ -146,7 +116,7 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
               <TouchableOpacity style={styles.actionButton}>
                 <Edit3 size={16} color="#3B82F6" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteFarm(farm.id)}>
+              <TouchableOpacity style={styles.actionButton}>
                 <Trash2 size={16} color="#EF4444" />
               </TouchableOpacity>
             </View>
@@ -162,7 +132,7 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
               <TouchableOpacity style={styles.actionButton}>
                 <Edit3 size={16} color="#3B82F6" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteField(field.id)}>
+              <TouchableOpacity style={styles.actionButton}>
                 <Trash2 size={16} color="#EF4444" />
               </TouchableOpacity>
             </View>
@@ -178,7 +148,7 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
               <TouchableOpacity style={styles.actionButton}>
                 <Edit3 size={16} color="#3B82F6" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteCrop(crop.id)}>
+              <TouchableOpacity style={styles.actionButton}>
                 <Trash2 size={16} color="#EF4444" />
               </TouchableOpacity>
             </View>
