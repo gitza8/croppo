@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
-import { Plus, CreditCard as Edit3, X, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import { Plus, CreditCard as Edit3, X, TriangleAlert as AlertTriangle, Trash2 } from 'lucide-react-native';
 import FormField from '@/components/FormField';
 import Dropdown from '@/components/Dropdown';
 
@@ -10,6 +10,7 @@ interface TasksTabProps {
 
 export default function TasksTab({ operationsData }: TasksTabProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -19,29 +20,86 @@ export default function TasksTab({ operationsData }: TasksTabProps) {
     fieldId: '',
   });
 
-  const { fields, tasks, addTask, updateTask, getOverdueTasks } = operationsData;
+  const { fields, tasks, addTask, updateTask, deleteTask, getOverdueTasks } = operationsData;
 
-  const handleAddTask = async () => {
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      dueDate: '',
+      assignee: '',
+      priority: 'Medium',
+      fieldId: '',
+    });
+    setEditingTask(null);
+  };
+
+  const handleAdd = () => {
+    resetForm();
+    setShowAddModal(true);
+  };
+
+  const handleEdit = (task: any) => {
+    setFormData({
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      assignee: task.assignee,
+      priority: task.priority,
+      fieldId: task.fieldId?.toString() || '',
+    });
+    setEditingTask(task);
+    setShowAddModal(true);
+  };
+
+  const handleDelete = (id: number) => {
+    Alert.alert(
+      'Delete Task',
+      'Are you sure you want to delete this task?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            const result = await deleteTask(id);
+            if (result) {
+              Alert.alert('Success', 'Task deleted successfully');
+            }
+          }
+        },
+      ]
+    );
+  };
+
+  const handleSave = async () => {
     if (!formData.title || !formData.dueDate || !formData.assignee) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    const result = await addTask({
+    const taskData = {
       title: formData.title,
       description: formData.description,
       dueDate: formData.dueDate,
       assignee: formData.assignee,
-      status: 'To Do',
+      status: editingTask ? editingTask.status : 'To Do' as const,
       priority: formData.priority as 'High' | 'Medium' | 'Low',
       fieldId: formData.fieldId ? parseInt(formData.fieldId) : undefined,
       attachments: [],
-    });
+    };
+
+    let result;
+    if (editingTask) {
+      result = await updateTask(editingTask.id, taskData);
+    } else {
+      result = await addTask(taskData);
+    }
 
     if (result) {
       setShowAddModal(false);
-      setFormData({ title: '', description: '', dueDate: '', assignee: '', priority: 'Medium', fieldId: '' });
-      Alert.alert('Success', 'Task added successfully');
+      resetForm();
+      Alert.alert('Success', `Task ${editingTask ? 'updated' : 'added'} successfully`);
     }
   };
 
@@ -68,12 +126,16 @@ export default function TasksTab({ operationsData }: TasksTabProps) {
   };
 
   const overdueTasks = getOverdueTasks();
+  const fieldOptions = fields.map((field: any) => ({ 
+    label: `${field.name} (${field.farmName})`, 
+    value: field.id.toString() 
+  }));
 
   return (
     <View style={styles.contentContainer}>
       <View style={styles.tableHeader}>
         <Text style={styles.tableHeaderText}>Task Management</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
           <Plus size={16} color="#FFFFFF" />
           <Text style={styles.addButtonText}>Add Task</Text>
         </TouchableOpacity>
@@ -88,56 +150,74 @@ export default function TasksTab({ operationsData }: TasksTabProps) {
         </View>
       )}
 
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Task</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Due Date</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Assignee</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Priority</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Status</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Actions</Text>
+      {tasks.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>No tasks created yet</Text>
+          <Text style={styles.emptyStateSubtext}>Add your first task to get started</Text>
         </View>
-
-        {tasks.map((task: any) => (
-          <View key={task.id} style={styles.tableRow}>
-            <View style={styles.tableCell}>
-              <Text style={styles.taskTitle}>{task.title}</Text>
-              <Text style={styles.taskDescription}>{task.description}</Text>
-            </View>
-            <Text style={styles.tableCell}>{task.dueDate}</Text>
-            <Text style={styles.tableCell}>{task.assignee}</Text>
-            <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(task.priority) + '20' }]}>
-              <Text style={[styles.priorityText, { color: getPriorityColor(task.priority) }]}>
-                {task.priority}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.statusBadge, { backgroundColor: getStatusColor(task.status) + '20' }]}
-              onPress={() => {
-                const statuses = ['To Do', 'In Progress', 'Done'];
-                const currentIndex = statuses.indexOf(task.status);
-                const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-                handleStatusChange(task.id, nextStatus);
-              }}
-            >
-              <Text style={[styles.statusText, { color: getStatusColor(task.status) }]}>
-                {task.status}
-              </Text>
-            </TouchableOpacity>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Edit3 size={16} color="#3B82F6" />
-              </TouchableOpacity>
-            </View>
+      ) : (
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Task</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Due Date</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Assignee</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Priority</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Status</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Actions</Text>
           </View>
-        ))}
-      </View>
 
-      {/* Add Task Modal */}
+          {tasks.map((task: any) => (
+            <View key={task.id} style={styles.tableRow}>
+              <View style={styles.tableCell}>
+                <Text style={styles.taskTitle}>{task.title}</Text>
+                <Text style={styles.taskDescription}>{task.description}</Text>
+              </View>
+              <Text style={styles.tableCell}>{task.dueDate}</Text>
+              <Text style={styles.tableCell}>{task.assignee}</Text>
+              <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(task.priority) + '20' }]}>
+                <Text style={[styles.priorityText, { color: getPriorityColor(task.priority) }]}>
+                  {task.priority}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.statusBadge, { backgroundColor: getStatusColor(task.status) + '20' }]}
+                onPress={() => {
+                  const statuses = ['To Do', 'In Progress', 'Done'];
+                  const currentIndex = statuses.indexOf(task.status);
+                  const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+                  handleStatusChange(task.id, nextStatus);
+                }}
+              >
+                <Text style={[styles.statusText, { color: getStatusColor(task.status) }]}>
+                  {task.status}
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.actionButtons}>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => handleEdit(task)}
+                >
+                  <Edit3 size={16} color="#3B82F6" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => handleDelete(task.id)}
+                >
+                  <Trash2 size={16} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Add/Edit Task Modal */}
       <Modal visible={showAddModal} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Task</Text>
+            <Text style={styles.modalTitle}>
+              {editingTask ? 'Edit Task' : 'Add Task'}
+            </Text>
             <TouchableOpacity onPress={() => setShowAddModal(false)}>
               <X size={24} color="#6B7280" />
             </TouchableOpacity>
@@ -190,7 +270,7 @@ export default function TasksTab({ operationsData }: TasksTabProps) {
 
             <Dropdown
               label="Field (Optional)"
-              options={fields.map((field: any) => ({ label: field.name, value: field.id.toString() }))}
+              options={fieldOptions}
               value={formData.fieldId}
               onSelect={(value) => setFormData({ ...formData, fieldId: value })}
               placeholder="Select field"
@@ -198,11 +278,16 @@ export default function TasksTab({ operationsData }: TasksTabProps) {
           </ScrollView>
 
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setShowAddModal(false)}>
+            <TouchableOpacity 
+              style={styles.cancelButton} 
+              onPress={() => setShowAddModal(false)}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleAddTask}>
-              <Text style={styles.saveButtonText}>Save</Text>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>
+                {editingTask ? 'Update' : 'Save'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -261,6 +346,22 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontWeight: '500',
     marginLeft: 8,
+  },
+  emptyState: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   table: {
     borderRadius: 8,

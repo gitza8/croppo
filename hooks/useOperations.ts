@@ -29,212 +29,10 @@ export function useOperations() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data for development
-  const mockFarms: Farm[] = [
-    { id: 1, name: 'North Farm', area: 150, location: 'North Valley' },
-    { id: 2, name: 'South Farm', area: 200, location: 'South Valley' },
-  ];
-
-  const mockFields: Field[] = [
-    { id: 1, name: 'Field A', farmId: 1, farmName: 'North Farm', area: 50, crop: 'Corn', soilType: 'Clay' },
-    { id: 2, name: 'Field B', farmId: 1, farmName: 'North Farm', area: 75, crop: 'Soybeans', soilType: 'Loam' },
-    { id: 3, name: 'Field C', farmId: 2, farmName: 'South Farm', area: 100, crop: 'Wheat', soilType: 'Sandy' },
-  ];
-
-  const mockCrops: Crop[] = [
-    { id: 1, name: 'Corn', variety: 'Pioneer 1234', fieldId: 1, fieldName: 'Field A', plantingDate: '2024-04-15' },
-    { id: 2, name: 'Soybeans', variety: 'Asgrow 3456', fieldId: 2, fieldName: 'Field B', plantingDate: '2024-05-01' },
-    { id: 3, name: 'Wheat', variety: 'Winter Red', fieldId: 3, fieldName: 'Field C', plantingDate: '2024-09-15' },
-  ];
-
-  const mockTasks: Task[] = [
-    {
-      id: 1,
-      title: 'Scout Field A for pests',
-      description: 'Check for corn borer and aphids',
-      dueDate: '2025-01-20',
-      assignee: 'John Smith',
-      status: 'To Do',
-      priority: 'High',
-      fieldId: 1,
-      fieldName: 'Field A',
-      attachments: [],
-    },
-    {
-      id: 2,
-      title: 'Apply fertilizer to Field B',
-      description: 'Apply nitrogen fertilizer before rain',
-      dueDate: '2025-01-18',
-      assignee: 'Sarah Johnson',
-      status: 'In Progress',
-      priority: 'Medium',
-      fieldId: 2,
-      fieldName: 'Field B',
-      attachments: [],
-    },
-    {
-      id: 3,
-      title: 'Harvest Field C',
-      description: 'Wheat is ready for harvest',
-      dueDate: '2025-01-15',
-      assignee: 'Mike Davis',
-      status: 'Done',
-      priority: 'High',
-      fieldId: 3,
-      fieldName: 'Field C',
-      attachments: [],
-    },
-  ];
-
-  const mockPlantings: Planting[] = [
-    {
-      id: 1,
-      date: '2024-04-15',
-      fieldId: 1,
-      fieldName: 'Field A',
-      cropId: 1,
-      cropName: 'Corn',
-      variety: 'Pioneer 1234',
-      operator: 'John Smith',
-      density: 75000,
-      spacing: '76cm rows',
-      notes: 'Good soil conditions',
-      attachments: [],
-    },
-  ];
-
-  const mockHarvests: Harvest[] = [
-    {
-      id: 1,
-      date: '2024-09-15',
-      fieldId: 3,
-      fieldName: 'Field C',
-      cropId: 3,
-      cropName: 'Wheat',
-      yield: 45,
-      yieldPerHectare: 4.5,
-      moisture: 14,
-      grade: 'Grade 1',
-      operator: 'Mike Davis',
-      weather: 'Sunny, 22°C',
-      qualityNotes: 'Excellent quality',
-      attachments: [],
-    },
-  ];
-
-  const mockTreatments: Treatment[] = [
-    {
-      id: 1,
-      date: '2024-06-01',
-      fieldId: 1,
-      fieldName: 'Field A',
-      cropId: 1,
-      cropName: 'Corn',
-      productId: 1,
-      productName: 'Roundup',
-      target: 'Weeds',
-      rate: 2.5,
-      unit: 'L/ha',
-      method: 'Boom spray',
-      operator: 'John Smith',
-      quantityUsed: 125,
-      attachments: [],
-    },
-  ];
-
-  const mockFertilizations: Fertilization[] = [
-    {
-      id: 1,
-      date: '2024-05-15',
-      fieldId: 2,
-      fieldName: 'Field B',
-      cropId: 2,
-      cropName: 'Soybeans',
-      productId: 2,
-      productName: 'NPK 20-10-10',
-      rate: 150,
-      unit: 'kg/ha',
-      npkRatio: '20-10-10',
-      cost: 450,
-      operator: 'Sarah Johnson',
-      quantityUsed: 11250,
-      applicationMethod: 'Broadcast',
-      attachments: [],
-    },
-  ];
-
-  const mockIrrigations: Irrigation[] = [
-    {
-      id: 1,
-      date: '2024-07-01',
-      fieldId: 1,
-      fieldName: 'Field A',
-      duration: 4,
-      waterApplied: 25,
-      soilMoisture: 'Adequate',
-      cost: 120,
-      operator: 'Mike Davis',
-      method: 'Pivot',
-    },
-  ];
-
-  const mockIPMRecords: IPMRecord[] = [
-    {
-      id: 1,
-      date: '2024-06-15',
-      fieldId: 1,
-      fieldName: 'Field A',
-      pest: 'Corn Borer',
-      count: 15,
-      threshold: 20,
-      severity: 'Medium',
-      action: 'Monitor',
-      notes: 'Below threshold, continue monitoring',
-      attachments: [],
-    },
-  ];
-
-  const mockBatchOperations: BatchOperation[] = [
-    {
-      id: 1,
-      name: 'Spring Fertilization',
-      operationType: 'Fertilization',
-      fieldIds: [1, 2],
-      fieldNames: ['Field A', 'Field B'],
-      date: '2024-04-01',
-      operator: 'John Smith',
-      productName: 'NPK 20-10-10',
-      rate: 150,
-      unit: 'kg/ha',
-      notes: 'Spring fertilization for corn and soybeans',
-      status: 'Completed',
-    },
-  ];
-
-  // Load all data
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // For now, use mock data
-      // In production, replace with actual API calls
-      setFarms(mockFarms);
-      setFields(mockFields);
-      setCrops(mockCrops);
-      setPlantings(mockPlantings);
-      setHarvests(mockHarvests);
-      setTreatments(mockTreatments);
-      setFertilizations(mockFertilizations);
-      setIrrigations(mockIrrigations);
-      setTasks(mockTasks);
-      setIpmRecords(mockIPMRecords);
-      setBatchOperations(mockBatchOperations);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
-    } finally {
-      setLoading(false);
-    }
+  // Initialize with empty arrays - no mock data
+  useEffect(() => {
+    // Start with empty data - user must create their own
+    setLoading(false);
   }, []);
 
   // Farm operations
@@ -266,6 +64,7 @@ export function useOperations() {
   const deleteFarm = useCallback(async (id: number) => {
     try {
       setFarms(prev => prev.filter(farm => farm.id !== id));
+      // Also remove related fields and crops
       setFields(prev => prev.filter(field => field.farmId !== id));
       setCrops(prev => prev.filter(crop => {
         const field = fields.find(f => f.id === crop.fieldId);
@@ -282,9 +81,13 @@ export function useOperations() {
   const addField = useCallback(async (fieldData: Omit<Field, 'id' | 'farmName'>) => {
     try {
       const farm = farms.find(f => f.id === fieldData.farmId);
+      if (!farm) {
+        setError('Farm not found');
+        return null;
+      }
       const newField: Field = {
         id: Math.max(...fields.map(f => f.id), 0) + 1,
-        farmName: farm?.name || '',
+        farmName: farm.name,
         ...fieldData,
       };
       setFields(prev => [...prev, newField]);
@@ -309,10 +112,66 @@ export function useOperations() {
   const deleteField = useCallback(async (id: number) => {
     try {
       setFields(prev => prev.filter(field => field.id !== id));
+      // Also remove related crops
       setCrops(prev => prev.filter(crop => crop.fieldId !== id));
+      // Remove related operations
+      setPlantings(prev => prev.filter(p => p.fieldId !== id));
+      setHarvests(prev => prev.filter(h => h.fieldId !== id));
+      setTreatments(prev => prev.filter(t => t.fieldId !== id));
+      setFertilizations(prev => prev.filter(f => f.fieldId !== id));
+      setIrrigations(prev => prev.filter(i => i.fieldId !== id));
+      setTasks(prev => prev.filter(t => t.fieldId !== id));
+      setIpmRecords(prev => prev.filter(r => r.fieldId !== id));
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete field');
+      return false;
+    }
+  }, []);
+
+  // Crop operations
+  const addCrop = useCallback(async (cropData: Omit<Crop, 'id' | 'fieldName'>) => {
+    try {
+      const field = fields.find(f => f.id === cropData.fieldId);
+      if (!field) {
+        setError('Field not found');
+        return null;
+      }
+      const newCrop: Crop = {
+        id: Math.max(...crops.map(c => c.id), 0) + 1,
+        fieldName: field.name,
+        ...cropData,
+      };
+      setCrops(prev => [...prev, newCrop]);
+      return newCrop;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add crop');
+      return null;
+    }
+  }, [fields, crops]);
+
+  const updateCrop = useCallback(async (id: number, cropData: Partial<Crop>) => {
+    try {
+      const updatedCrop = { ...crops.find(c => c.id === id)!, ...cropData };
+      setCrops(prev => prev.map(crop => crop.id === id ? updatedCrop : crop));
+      return updatedCrop;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update crop');
+      return null;
+    }
+  }, [crops]);
+
+  const deleteCrop = useCallback(async (id: number) => {
+    try {
+      setCrops(prev => prev.filter(crop => crop.id !== id));
+      // Remove related operations
+      setPlantings(prev => prev.filter(p => p.cropId !== id));
+      setHarvests(prev => prev.filter(h => h.cropId !== id));
+      setTreatments(prev => prev.filter(t => t.cropId !== id));
+      setFertilizations(prev => prev.filter(f => f.cropId !== id));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete crop');
       return false;
     }
   }, []);
@@ -440,7 +299,7 @@ export function useOperations() {
   }, []);
 
   // Treatment operations
-  const addTreatment = useCallback(async (treatmentData: Omit<Treatment, 'id' | 'fieldName' | 'cropName' | 'productName'>) => {
+  const addTreatment = useCallback(async (treatmentData: Omit<Treatment, 'id' | 'fieldName' | 'cropName'>) => {
     try {
       const field = fields.find(f => f.id === treatmentData.fieldId);
       const crop = crops.find(c => c.id === treatmentData.cropId);
@@ -448,7 +307,6 @@ export function useOperations() {
         id: Math.max(...treatments.map(t => t.id), 0) + 1,
         fieldName: field?.name || '',
         cropName: crop?.name || '',
-        productName: 'Product Name', // Would come from inventory
         ...treatmentData,
       };
       setTreatments(prev => [...prev, newTreatment]);
@@ -481,7 +339,7 @@ export function useOperations() {
   }, []);
 
   // Fertilization operations
-  const addFertilization = useCallback(async (fertilizationData: Omit<Fertilization, 'id' | 'fieldName' | 'cropName' | 'productName'>) => {
+  const addFertilization = useCallback(async (fertilizationData: Omit<Fertilization, 'id' | 'fieldName' | 'cropName'>) => {
     try {
       const field = fields.find(f => f.id === fertilizationData.fieldId);
       const crop = crops.find(c => c.id === fertilizationData.cropId);
@@ -489,7 +347,6 @@ export function useOperations() {
         id: Math.max(...fertilizations.map(f => f.id), 0) + 1,
         fieldName: field?.name || '',
         cropName: crop?.name || '',
-        productName: 'Product Name', // Would come from inventory
         ...fertilizationData,
       };
       setFertilizations(prev => [...prev, newFertilization]);
@@ -658,11 +515,6 @@ export function useOperations() {
     return tasks.filter(task => task.status === status);
   }, [tasks]);
 
-  // Load data on mount
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
   return {
     // Data
     farms,
@@ -680,13 +532,15 @@ export function useOperations() {
     error,
     
     // Operations
-    loadData,
     addFarm,
     updateFarm,
     deleteFarm,
     addField,
     updateField,
     deleteField,
+    addCrop,
+    updateCrop,
+    deleteCrop,
     addTask,
     updateTask,
     deleteTask,

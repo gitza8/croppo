@@ -11,6 +11,7 @@ interface FarmsFieldsCropsTabProps {
 export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCropsTabProps) {
   const [subTab, setSubTab] = useState('farms');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     area: '',
@@ -20,51 +21,295 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
     variety: '',
     soilType: '',
     crop: '',
+    plantingDate: '',
   });
 
-  const { farms, fields, crops, addFarm, addField } = operationsData;
+  const { 
+    farms, 
+    fields, 
+    crops, 
+    addFarm, 
+    addField, 
+    addCrop,
+    updateFarm,
+    updateField,
+    updateCrop,
+    deleteFarm,
+    deleteField,
+    deleteCrop
+  } = operationsData;
 
-  const handleAddFarm = async () => {
-    if (!formData.name || !formData.area || !formData.location) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-
-    const result = await addFarm({
-      name: formData.name,
-      area: parseFloat(formData.area),
-      location: formData.location,
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      area: '',
+      location: '',
+      farmId: '',
+      fieldId: '',
+      variety: '',
+      soilType: '',
+      crop: '',
+      plantingDate: '',
     });
-
-    if (result) {
-      setShowAddModal(false);
-      setFormData({ name: '', area: '', location: '', farmId: '', fieldId: '', variety: '', soilType: '', crop: '' });
-      Alert.alert('Success', 'Farm added successfully');
-    }
+    setEditingItem(null);
   };
 
-  const handleAddField = async () => {
-    if (!formData.name || !formData.farmId || !formData.area) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
+  const handleAdd = () => {
+    resetForm();
+    setShowAddModal(true);
+  };
 
-    const result = await addField({
-      name: formData.name,
-      farmId: parseInt(formData.farmId),
-      area: parseFloat(formData.area),
-      soilType: formData.soilType,
-      crop: formData.crop,
+  const handleEdit = (item: any) => {
+    setFormData({
+      name: item.name || '',
+      area: item.area?.toString() || '',
+      location: item.location || '',
+      farmId: item.farmId?.toString() || '',
+      fieldId: item.fieldId?.toString() || '',
+      variety: item.variety || '',
+      soilType: item.soilType || '',
+      crop: item.crop || '',
+      plantingDate: item.plantingDate || '',
     });
+    setEditingItem(item);
+    setShowAddModal(true);
+  };
 
-    if (result) {
-      setShowAddModal(false);
-      setFormData({ name: '', area: '', location: '', farmId: '', fieldId: '', variety: '', soilType: '', crop: '' });
-      Alert.alert('Success', 'Field added successfully');
+  const handleDelete = async (id: number, type: string) => {
+    Alert.alert(
+      `Delete ${type}`,
+      `Are you sure you want to delete this ${type.toLowerCase()}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            let result = false;
+            if (type === 'Farm') {
+              result = await deleteFarm(id);
+            } else if (type === 'Field') {
+              result = await deleteField(id);
+            } else if (type === 'Crop') {
+              result = await deleteCrop(id);
+            }
+            
+            if (result) {
+              Alert.alert('Success', `${type} deleted successfully`);
+            } else {
+              Alert.alert('Error', `Failed to delete ${type.toLowerCase()}`);
+            }
+          }
+        },
+      ]
+    );
+  };
+
+  const handleSave = async () => {
+    if (subTab === 'farms') {
+      if (!formData.name || !formData.area || !formData.location) {
+        Alert.alert('Error', 'Please fill in all required fields');
+        return;
+      }
+
+      const farmData = {
+        name: formData.name,
+        area: parseFloat(formData.area),
+        location: formData.location,
+      };
+
+      let result;
+      if (editingItem) {
+        result = await updateFarm(editingItem.id, farmData);
+      } else {
+        result = await addFarm(farmData);
+      }
+
+      if (result) {
+        setShowAddModal(false);
+        resetForm();
+        Alert.alert('Success', `Farm ${editingItem ? 'updated' : 'added'} successfully`);
+      }
+    } else if (subTab === 'fields') {
+      if (!formData.name || !formData.farmId || !formData.area) {
+        Alert.alert('Error', 'Please fill in all required fields');
+        return;
+      }
+
+      const fieldData = {
+        name: formData.name,
+        farmId: parseInt(formData.farmId),
+        area: parseFloat(formData.area),
+        soilType: formData.soilType,
+        crop: formData.crop,
+      };
+
+      let result;
+      if (editingItem) {
+        result = await updateField(editingItem.id, fieldData);
+      } else {
+        result = await addField(fieldData);
+      }
+
+      if (result) {
+        setShowAddModal(false);
+        resetForm();
+        Alert.alert('Success', `Field ${editingItem ? 'updated' : 'added'} successfully`);
+      }
+    } else if (subTab === 'crops') {
+      if (!formData.name || !formData.fieldId || !formData.variety) {
+        Alert.alert('Error', 'Please fill in all required fields');
+        return;
+      }
+
+      const cropData = {
+        name: formData.name,
+        fieldId: parseInt(formData.fieldId),
+        variety: formData.variety,
+        plantingDate: formData.plantingDate,
+      };
+
+      let result;
+      if (editingItem) {
+        result = await updateCrop(editingItem.id, cropData);
+      } else {
+        result = await addCrop(cropData);
+      }
+
+      if (result) {
+        setShowAddModal(false);
+        resetForm();
+        Alert.alert('Success', `Crop ${editingItem ? 'updated' : 'added'} successfully`);
+      }
     }
   };
 
   const farmOptions = farms.map((farm: any) => ({ label: farm.name, value: farm.id.toString() }));
+  const fieldOptions = fields.map((field: any) => ({ label: `${field.name} (${field.farmName})`, value: field.id.toString() }));
+
+  const renderContent = () => {
+    if (subTab === 'farms') {
+      return (
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Name</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Location</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Area (ha)</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Actions</Text>
+          </View>
+
+          {farms.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No farms added yet</Text>
+              <Text style={styles.emptyStateSubtext}>Add your first farm to get started</Text>
+            </View>
+          ) : (
+            farms.map((farm: any) => (
+              <View key={farm.id} style={styles.tableRow}>
+                <Text style={styles.tableCell}>{farm.name}</Text>
+                <Text style={styles.tableCell}>{farm.location}</Text>
+                <Text style={styles.tableCell}>{farm.area}</Text>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleEdit(farm)}
+                  >
+                    <Edit3 size={16} color="#3B82F6" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleDelete(farm.id, 'Farm')}
+                  >
+                    <Trash2 size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
+      );
+    } else if (subTab === 'fields') {
+      return (
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Name</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Farm</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Area (ha)</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Actions</Text>
+          </View>
+
+          {fields.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No fields added yet</Text>
+              <Text style={styles.emptyStateSubtext}>Add fields to your farms</Text>
+            </View>
+          ) : (
+            fields.map((field: any) => (
+              <View key={field.id} style={styles.tableRow}>
+                <Text style={styles.tableCell}>{field.name}</Text>
+                <Text style={styles.tableCell}>{field.farmName}</Text>
+                <Text style={styles.tableCell}>{field.area}</Text>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleEdit(field)}
+                  >
+                    <Edit3 size={16} color="#3B82F6" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleDelete(field.id, 'Field')}
+                  >
+                    <Trash2 size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
+      );
+    } else {
+      return (
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Name</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Field</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Variety</Text>
+            <Text style={[styles.tableCell, styles.tableCellHeader]}>Actions</Text>
+          </View>
+
+          {crops.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No crops added yet</Text>
+              <Text style={styles.emptyStateSubtext}>Add crops to your fields</Text>
+            </View>
+          ) : (
+            crops.map((crop: any) => (
+              <View key={crop.id} style={styles.tableRow}>
+                <Text style={styles.tableCell}>{crop.name}</Text>
+                <Text style={styles.tableCell}>{crop.fieldName}</Text>
+                <Text style={styles.tableCell}>{crop.variety}</Text>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleEdit(crop)}
+                  >
+                    <Edit3 size={16} color="#3B82F6" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleDelete(crop.id, 'Crop')}
+                  >
+                    <Trash2 size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
+      );
+    }
+  };
 
   return (
     <View style={styles.contentContainer}>
@@ -88,7 +333,7 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
         </Text>
         <TouchableOpacity 
           style={styles.addButton} 
-          onPress={() => setShowAddModal(true)}
+          onPress={handleAdd}
         >
           <Plus size={16} color="#FFFFFF" />
           <Text style={styles.addButtonText}>
@@ -97,71 +342,14 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
         </TouchableOpacity>
       </View>
 
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Name</Text>
-          {subTab === 'farms' && <Text style={[styles.tableCell, styles.tableCellHeader]}>Location</Text>}
-          {subTab === 'fields' && <Text style={[styles.tableCell, styles.tableCellHeader]}>Farm</Text>}
-          {subTab === 'crops' && <Text style={[styles.tableCell, styles.tableCellHeader]}>Field</Text>}
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Area</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Actions</Text>
-        </View>
+      {renderContent()}
 
-        {subTab === 'farms' && farms.map((farm: any) => (
-          <View key={farm.id} style={styles.tableRow}>
-            <Text style={styles.tableCell}>{farm.name}</Text>
-            <Text style={styles.tableCell}>{farm.location}</Text>
-            <Text style={styles.tableCell}>{farm.area} ha</Text>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Edit3 size={16} color="#3B82F6" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Trash2 size={16} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-
-        {subTab === 'fields' && fields.map((field: any) => (
-          <View key={field.id} style={styles.tableRow}>
-            <Text style={styles.tableCell}>{field.name}</Text>
-            <Text style={styles.tableCell}>{field.farmName}</Text>
-            <Text style={styles.tableCell}>{field.area} ha</Text>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Edit3 size={16} color="#3B82F6" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Trash2 size={16} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-
-        {subTab === 'crops' && crops.map((crop: any) => (
-          <View key={crop.id} style={styles.tableRow}>
-            <Text style={styles.tableCell}>{crop.name}</Text>
-            <Text style={styles.tableCell}>{crop.fieldName}</Text>
-            <Text style={styles.tableCell}>{crop.variety}</Text>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Edit3 size={16} color="#3B82F6" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Trash2 size={16} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      {/* Add Modal */}
+      {/* Add/Edit Modal */}
       <Modal visible={showAddModal} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
-              Add {subTab === 'farms' ? 'Farm' : subTab === 'fields' ? 'Field' : 'Crop'}
+              {editingItem ? 'Edit' : 'Add'} {subTab === 'farms' ? 'Farm' : subTab === 'fields' ? 'Field' : 'Crop'}
             </Text>
             <TouchableOpacity onPress={() => setShowAddModal(false)}>
               <X size={24} color="#6B7280" />
@@ -228,7 +416,7 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
               <>
                 <Dropdown
                   label="Field"
-                  options={fields.map((field: any) => ({ label: field.name, value: field.id.toString() }))}
+                  options={fieldOptions}
                   value={formData.fieldId}
                   onSelect={(value) => setFormData({ ...formData, fieldId: value })}
                   placeholder="Select field"
@@ -240,6 +428,12 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
                   onChangeText={(text) => setFormData({ ...formData, variety: text })}
                   placeholder="Enter crop variety"
                   required
+                />
+                <FormField
+                  label="Planting Date"
+                  value={formData.plantingDate}
+                  onChangeText={(text) => setFormData({ ...formData, plantingDate: text })}
+                  placeholder="YYYY-MM-DD"
                 />
               </>
             )}
@@ -254,9 +448,11 @@ export default function FarmsFieldsCropsTab({ operationsData }: FarmsFieldsCrops
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.saveButton} 
-              onPress={subTab === 'farms' ? handleAddFarm : subTab === 'fields' ? handleAddField : () => {}}
+              onPress={handleSave}
             >
-              <Text style={styles.saveButtonText}>Save</Text>
+              <Text style={styles.saveButtonText}>
+                {editingItem ? 'Update' : 'Save'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -362,6 +558,22 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 4,
+  },
+  emptyState: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   modalContainer: {
     flex: 1,
