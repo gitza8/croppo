@@ -1,30 +1,89 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Calendar, CircleCheck as CheckCircle, Clock, TrendingUp, TriangleAlert as AlertTriangle, Users } from 'lucide-react-native';
-
-const summaryData = [
-  { title: 'Active Fields', value: '12', icon: 'field', color: '#10B981' },
-  { title: 'Pending Tasks', value: '8', icon: 'tasks', color: '#F59E0B' },
-  { title: 'Recent Operations', value: '24', icon: 'operations', color: '#3B82F6' },
-  { title: 'Low Stock Items', value: '3', icon: 'inventory', color: '#EF4444' },
-];
-
-const upcomingTasks = [
-  { id: 1, task: 'Fertilize Field A', dueDate: '2025-01-15', operator: 'John Smith', status: 'Pending', priority: 'High' },
-  { id: 2, task: 'Harvest Tomatoes', dueDate: '2025-01-16', operator: 'Sarah Johnson', status: 'In Progress', priority: 'Medium' },
-  { id: 3, task: 'Irrigation Check', dueDate: '2025-01-17', operator: 'Mike Davis', status: 'Pending', priority: 'Low' },
-  { id: 4, task: 'Pest Control Spray', dueDate: '2025-01-18', operator: 'Lisa Wilson', status: 'Pending', priority: 'High' },
-];
-
-const recentActivities = [
-  { id: 1, activity: 'Fertilizer applied to Field B', time: '2 hours ago', type: 'fertilization' },
-  { id: 2, activity: 'Inventory updated: Pesticide A', time: '4 hours ago', type: 'inventory' },
-  { id: 3, activity: 'Task completed: Watering System', time: '6 hours ago', type: 'task' },
-  { id: 4, activity: 'New invoice created', time: '8 hours ago', type: 'finance' },
-];
+import { useOperations } from '@/hooks/useOperations';
 
 export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const operationsData = useOperations();
+
+  const { 
+    farms, 
+    fields, 
+    tasks, 
+    plantings, 
+    harvests, 
+    treatments, 
+    fertilizations, 
+    irrigations,
+    getOverdueTasks,
+    getTasksByStatus 
+  } = operationsData;
+
+  // Calculate summary data from actual operations
+  const summaryData = [
+    { 
+      title: 'Active Fields', 
+      value: fields.length.toString(), 
+      icon: 'field', 
+      color: '#10B981' 
+    },
+    { 
+      title: 'Pending Tasks', 
+      value: getTasksByStatus('To Do').length.toString(), 
+      icon: 'tasks', 
+      color: '#F59E0B' 
+    },
+    { 
+      title: 'Recent Operations', 
+      value: (plantings.length + harvests.length + treatments.length + fertilizations.length + irrigations.length).toString(), 
+      icon: 'operations', 
+      color: '#3B82F6' 
+    },
+    { 
+      title: 'Overdue Tasks', 
+      value: getOverdueTasks().length.toString(), 
+      icon: 'inventory', 
+      color: '#EF4444' 
+    },
+  ];
+
+  // Get recent tasks
+  const upcomingTasks = tasks.slice(0, 4);
+
+  // Get recent activities from all operations
+  const recentActivities = [
+    ...plantings.map(p => ({ 
+      id: `planting-${p.id}`, 
+      activity: `Planted ${p.cropName} in ${p.fieldName}`, 
+      time: p.date, 
+      type: 'planting' 
+    })),
+    ...harvests.map(h => ({ 
+      id: `harvest-${h.id}`, 
+      activity: `Harvested ${h.cropName} from ${h.fieldName}`, 
+      time: h.date, 
+      type: 'harvest' 
+    })),
+    ...treatments.map(t => ({ 
+      id: `treatment-${t.id}`, 
+      activity: `Applied ${t.productName} to ${t.fieldName}`, 
+      time: t.date, 
+      type: 'treatment' 
+    })),
+    ...fertilizations.map(f => ({ 
+      id: `fertilization-${f.id}`, 
+      activity: `Applied ${f.productName} to ${f.fieldName}`, 
+      time: f.date, 
+      type: 'fertilization' 
+    })),
+    ...irrigations.map(i => ({ 
+      id: `irrigation-${i.id}`, 
+      activity: `Irrigated ${i.fieldName} for ${i.duration} hours`, 
+      time: i.date, 
+      type: 'irrigation' 
+    })),
+  ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 4);
 
   const renderSummaryCard = (item: any, index: number) => (
     <View key={index} style={styles.summaryCard}>
@@ -44,13 +103,13 @@ export default function Dashboard() {
   const renderTaskRow = (task: any) => (
     <View key={task.id} style={styles.taskRow}>
       <View style={styles.taskInfo}>
-        <Text style={styles.taskTitle}>{task.task}</Text>
+        <Text style={styles.taskTitle}>{task.title}</Text>
         <Text style={styles.taskDate}>{task.dueDate}</Text>
       </View>
       <View style={styles.taskMeta}>
         <View style={styles.operatorContainer}>
           <Users size={16} color="#6B7280" />
-          <Text style={styles.operatorText}>{task.operator}</Text>
+          <Text style={styles.operatorText}>{task.assignee}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(task.status) + '20' }]}>
           <Text style={[styles.statusText, { color: getStatusColor(task.status) }]}>{task.status}</Text>
@@ -114,24 +173,40 @@ export default function Dashboard() {
           <View style={styles.chartPlaceholder}>
             <TrendingUp size={48} color="#10B981" />
             <Text style={styles.chartPlaceholderText}>Operations Trend</Text>
-            <Text style={styles.chartPlaceholderSubtext}>24 operations this {selectedPeriod}</Text>
+            <Text style={styles.chartPlaceholderSubtext}>
+              {summaryData[2].value} operations this {selectedPeriod}
+            </Text>
           </View>
         </View>
 
         {/* Upcoming Tasks */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Upcoming Tasks</Text>
-          <View style={styles.taskContainer}>
-            {upcomingTasks.map(renderTaskRow)}
-          </View>
+          {upcomingTasks.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No tasks created yet</Text>
+              <Text style={styles.emptyStateSubtext}>Create tasks in the Operations tab</Text>
+            </View>
+          ) : (
+            <View style={styles.taskContainer}>
+              {upcomingTasks.map(renderTaskRow)}
+            </View>
+          )}
         </View>
 
         {/* Recent Activities */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Activities</Text>
-          <View style={styles.activityContainer}>
-            {recentActivities.map(renderActivityRow)}
-          </View>
+          {recentActivities.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No activities yet</Text>
+              <Text style={styles.emptyStateSubtext}>Start adding operations to see activities</Text>
+            </View>
+          ) : (
+            <View style={styles.activityContainer}>
+              {recentActivities.map(renderActivityRow)}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -140,9 +215,9 @@ export default function Dashboard() {
 
 function getStatusColor(status: string): string {
   switch (status) {
-    case 'Pending': return '#F59E0B';
+    case 'To Do': return '#F59E0B';
     case 'In Progress': return '#3B82F6';
-    case 'Completed': return '#10B981';
+    case 'Done': return '#10B981';
     default: return '#6B7280';
   }
 }
@@ -158,10 +233,11 @@ function getPriorityColor(priority: string): string {
 
 function getActivityColor(type: string): string {
   switch (type) {
-    case 'fertilization': return '#10B981';
-    case 'inventory': return '#3B82F6';
-    case 'task': return '#F59E0B';
-    case 'finance': return '#8B5CF6';
+    case 'planting': return '#10B981';
+    case 'harvest': return '#F59E0B';
+    case 'treatment': return '#EF4444';
+    case 'fertilization': return '#3B82F6';
+    case 'irrigation': return '#06B6D4';
     default: return '#6B7280';
   }
 }
@@ -305,6 +381,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  emptyState: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   taskContainer: {
     marginTop: 16,
