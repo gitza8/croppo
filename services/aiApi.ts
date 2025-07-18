@@ -30,6 +30,16 @@ class AIAPI {
       body: JSON.stringify(config),
     });
   }
+
+  /**
+   * Generic method to fetch AI insights for any set of modules (e.g. inventory, finance).
+   */
+  async getInsights(modules: string[]): Promise<{ insights: string }> {
+    return this.request<{ insights: string }>('/ai/insights', {
+      method: 'POST',
+      body: JSON.stringify({ modules }),
+    });
+  }
 }
 
 const aiApi = new AIAPI();

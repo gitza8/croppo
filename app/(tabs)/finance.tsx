@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { DollarSign, CreditCard, Receipt, Users, FileText, Calculator, TrendingUp } from 'lucide-react-native';
+import AIInsightsPanel from '@/components/AIInsightsPanel';
+import aiApi from '@/services/aiApi';
+import { useEffect } from 'react';
 
 const financeTabs = [
   { id: 'accounts', title: 'Accounts', icon: 'creditcard' },
@@ -41,6 +44,24 @@ const payrollData = [
 
 export default function Finance() {
   const [activeTab, setActiveTab] = useState('accounts');
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+
+  const fetchInsights = async () => {
+    try {
+      setInsightsLoading(true);
+      const response = await aiApi.getInsights(['finance']);
+      setAiInsights(response.insights);
+    } catch (error) {
+      console.error('Failed to fetch finance insights:', error);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsights();
+  }, []);
 
   const renderTabButton = (tab: any) => (
     <TouchableOpacity
@@ -263,6 +284,11 @@ export default function Finance() {
       </ScrollView>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <AIInsightsPanel
+          insights={aiInsights}
+          loading={insightsLoading}
+          onRefresh={fetchInsights}
+        />
         {renderContent()}
       </ScrollView>
     </SafeAreaView>

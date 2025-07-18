@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Swi
 import { Package, ArrowUp, ArrowDown, TriangleAlert as AlertTriangle, TrendingDown, Plus, Search, Filter, Calendar, Camera, Scan, Users, DollarSign, Clock, MapPin, X } from 'lucide-react-native';
 import { useRequestQueueContext } from '@/hooks/useRequestQueue';
 import { useInventoryContext } from '@/hooks/useInventory';
+import AIInsightsPanel from '@/components/AIInsightsPanel';
+import aiApi from '@/services/aiApi';
+import { useEffect } from 'react';
 
 const inventoryTabs = [
   { id: 'items', title: 'Items', icon: 'package' },
@@ -189,10 +192,28 @@ export default function Inventory() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   const categories = ['All', 'Fertilizers', 'Pesticides', 'Seeds', 'Equipment', 'Harvested Goods'];
   const requestQueue = useRequestQueueContext();
   const inventory = useInventoryContext();
+
+  const fetchInsights = async () => {
+    try {
+      setInsightsLoading(true);
+      const response = await aiApi.getInsights(['inventory']);
+      setAiInsights(response.insights);
+    } catch (error) {
+      console.error('Failed to fetch inventory insights:', error);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsights();
+  }, []);
 
   const renderTabButton = (tab: any) => (
     <TouchableOpacity
@@ -618,6 +639,11 @@ export default function Inventory() {
       </ScrollView>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <AIInsightsPanel
+          insights={aiInsights}
+          loading={insightsLoading}
+          onRefresh={fetchInsights}
+        />
         {renderContent()}
       </ScrollView>
 
