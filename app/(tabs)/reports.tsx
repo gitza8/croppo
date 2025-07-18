@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Switch } from 'react-native';
 import { FileText, Download, Filter, Calendar, SquareCheck as CheckSquare, ChartBar as BarChart3, ChartPie as PieChart } from 'lucide-react-native';
+import AIInsightsPanel from '@/components/AIInsightsPanel';
+import aiApi from '@/services/aiApi';
+import { useEffect } from 'react';
 
 const reportSections = [
   { id: 'operations', title: 'Operations', description: 'Field activities, treatments, and tasks', enabled: true },
@@ -27,6 +30,8 @@ export default function Reports() {
   const [selectedSections, setSelectedSections] = useState(reportSections);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [reportTitle, setReportTitle] = useState('Custom Farm Report');
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   const toggleSection = (sectionId: string) => {
     setSelectedSections(prev => 
@@ -118,6 +123,36 @@ export default function Reports() {
     </TouchableOpacity>
   );
 
+  const fetchInsights = async () => {
+    try {
+      setInsightsLoading(true);
+      const enabledModules = selectedSections
+        .filter((s) => s.enabled)
+        .map((s) => s.id);
+      const config = {
+        name: 'Quick Insights',
+        type: 'custom',
+        modules: enabledModules,
+        fields: [],
+        filters: {},
+        format: 'pdf',
+        isScheduled: false,
+        createdBy: 0,
+      } as const;
+      const response = await aiApi.getReportInsights(config);
+      setAiInsights(response.insights);
+    } catch (error) {
+      console.error('Failed to fetch AI insights:', error);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -208,6 +243,13 @@ export default function Reports() {
             </View>
           </View>
         </View>
+
+        {/* AI Insights Panel */}
+        <AIInsightsPanel
+          insights={aiInsights}
+          loading={insightsLoading}
+          onRefresh={fetchInsights}
+        />
 
         {/* Recent Reports */}
         <View style={styles.section}>
