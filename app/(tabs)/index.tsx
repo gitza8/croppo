@@ -278,6 +278,35 @@ export default function Dashboard() {
           {kpiWidgets.map((item, index) => renderKPIWidget(item, index))}
         </View>
 
+        {/* Agronomist Features Highlight */}
+        <View style={styles.agronomistSection}>
+          <Text style={styles.sectionTitle}>Agronomist Tools</Text>
+          <Text style={styles.sectionSubtitle}>Advanced crop and soil management features</Text>
+          <View style={styles.featureGrid}>
+            <TouchableOpacity style={styles.featureCard}>
+              <View style={[styles.featureIcon, { backgroundColor: '#10B981' }]}>
+                <Sprout size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.featureTitle}>Crop Planning</Text>
+              <Text style={styles.featureDescription}>Plan rotations, forecast yields, and track growth stages</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.featureCard}>
+              <View style={[styles.featureIcon, { backgroundColor: '#8B5CF6' }]}>
+                <Package size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.featureTitle}>Soil Health</Text>
+              <Text style={styles.featureDescription}>Monitor soil tests and plan fertilization strategies</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.featureCard}>
+              <View style={[styles.featureIcon, { backgroundColor: '#3B82F6' }]}>
+                <Droplets size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.featureTitle}>Smart Irrigation</Text>
+              <Text style={styles.featureDescription}>Real-time monitoring and intelligent scheduling</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Alerts Panel */}
         {alerts.length > 0 && (
           <View style={styles.alertsSection}>
@@ -474,6 +503,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     fontWeight: '500',
+  },
+  agronomistSection: {
+    margin: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  featureGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  featureCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    width: '31%',
+    alignItems: 'center',
+    minHeight: 120,
+  },
+  featureIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  featureTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  featureDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
   },
   alertsSection: {
     margin: 16,
