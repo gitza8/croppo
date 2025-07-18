@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { operationsApi } from '../services/operationsApi';
 import { 
   Farm, 
@@ -13,6 +13,7 @@ import {
   IPMRecord,
   BatchOperation 
 } from '../types/operations';
+import React from 'react';
 
 export function useOperations() {
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -574,4 +575,23 @@ export function useOperations() {
     getOverdueTasks,
     getTasksByStatus,
   };
+}
+
+const OperationsContext = createContext<ReturnType<typeof useOperations> | undefined>(undefined);
+
+export function OperationsProvider({ children }: { children: ReactNode }) {
+  const value = useOperations();
+  return React.createElement(
+    OperationsContext.Provider,
+    { value },
+    children
+  );
+}
+
+export function useOperationsContext() {
+  const context = useContext(OperationsContext);
+  if (context === undefined) {
+    throw new Error('useOperationsContext must be used within an OperationsProvider');
+  }
+  return context;
 }

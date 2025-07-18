@@ -41,15 +41,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="treatments"
-        options={{
-          title: 'Treatments',
-          tabBarIcon: ({ size, color }) => (
-            <Bug size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="inventory"
         options={{
           title: 'Inventory',

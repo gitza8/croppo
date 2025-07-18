@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, typography, spacing, radii } from './designSystem';
 
 interface FormFieldProps {
   label: string;
@@ -49,37 +50,37 @@ export default function FormField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 8,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '500', // use valid RN value
+    color: colors.muted,
+    marginBottom: spacing.sm,
   },
   required: {
-    color: '#EF4444',
+    color: colors.danger,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    fontSize: typography.fontSize.md,
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   textArea: {
     height: 80,
     textAlignVertical: 'top',
   },
   inputError: {
-    borderColor: '#EF4444',
+    borderColor: colors.danger,
   },
   errorText: {
-    fontSize: 12,
-    color: '#EF4444',
-    marginTop: 4,
+    fontSize: typography.fontSize.xs,
+    color: colors.danger,
+    marginTop: spacing.xs,
   },
 });

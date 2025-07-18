@@ -171,22 +171,14 @@ export default function PlantingsTab({ operationsData }: PlantingsTabProps) {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingPlanting ? 'Edit Planting' : 'Add Planting'}
+                {editingPlanting ? 'Edit Planting' : 'Schedule Planting'}
               </Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <X size={24} color="#6B7280" />
+                <Text style={{ color: '#3B82F6', fontSize: 16 }}>Cancel</Text>
               </TouchableOpacity>
             </View>
-
             <ScrollView style={styles.modalContent}>
-              <FormField
-                label="Date"
-                value={formData.date}
-                onChangeText={(text) => setFormData({ ...formData, date: text })}
-                placeholder="YYYY-MM-DD"
-                required
-              />
-
+              <Text style={styles.sectionHeader}>Select Field *</Text>
               <Dropdown
                 label="Field"
                 options={fieldOptions}
@@ -195,7 +187,7 @@ export default function PlantingsTab({ operationsData }: PlantingsTabProps) {
                 placeholder="Select field"
                 required
               />
-
+              <Text style={styles.sectionHeader}>Select Crop</Text>
               <Dropdown
                 label="Crop"
                 options={cropOptions}
@@ -203,7 +195,14 @@ export default function PlantingsTab({ operationsData }: PlantingsTabProps) {
                 onSelect={(value) => setFormData({ ...formData, cropId: value })}
                 placeholder="Select crop"
               />
-
+              <Text style={styles.sectionHeader}>Planting Details</Text>
+              <FormField
+                label="Date"
+                value={formData.date}
+                onChangeText={(text) => setFormData({ ...formData, date: text })}
+                placeholder="YYYY-MM-DD"
+                required
+              />
               <FormField
                 label="Variety"
                 value={formData.variety}
@@ -211,7 +210,6 @@ export default function PlantingsTab({ operationsData }: PlantingsTabProps) {
                 placeholder="Enter variety"
                 required
               />
-
               <FormField
                 label="Operator"
                 value={formData.operator}
@@ -219,31 +217,27 @@ export default function PlantingsTab({ operationsData }: PlantingsTabProps) {
                 placeholder="Enter operator name"
                 required
               />
-
               <FormField
-                label="Density (plants/ha)"
+                label="Density"
                 value={formData.density}
                 onChangeText={(text) => setFormData({ ...formData, density: text })}
-                placeholder="Enter planting density"
+                placeholder="Enter density"
                 keyboardType="numeric"
               />
-
               <FormField
                 label="Spacing"
                 value={formData.spacing}
                 onChangeText={(text) => setFormData({ ...formData, spacing: text })}
-                placeholder="Enter row spacing"
+                placeholder="Enter spacing"
               />
-
               <FormField
                 label="Notes"
                 value={formData.notes}
                 onChangeText={(text) => setFormData({ ...formData, notes: text })}
-                placeholder="Enter additional notes"
+                placeholder="Enter notes"
                 multiline
               />
             </ScrollView>
-
             <View style={styles.modalActions}>
               <TouchableOpacity 
                 style={styles.cancelButton} 
@@ -390,5 +384,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 20,
+    marginBottom: 8,
   },
 });

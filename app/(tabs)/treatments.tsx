@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Modal, TextInput, Alert } from 'react-native';
-import { Calendar, Plus, FileText, History, Info, Bug, Droplets, MapPin, Clock, User, DollarSign, Download } from 'lucide-react-native';
+import { Calendar, Plus, FileText, History, Info, Bug, Droplets, MapPin, Clock, User, DollarSign, Download, Sprout } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { TreatmentSchedule, InventoryItem, Field } from '@/types/operations';
+import { useOperationsContext } from '@/hooks/useOperations';
+import { useInventoryContext } from '@/hooks/useInventory';
+import { useRequestQueueContext } from '@/hooks/useRequestQueue';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import Dropdown from '@/components/Dropdown'; // Added Dropdown import
 
 const treatmentTabs = [
   { id: 'calendar', title: 'Calendar', icon: 'calendar' },
@@ -11,12 +16,6 @@ const treatmentTabs = [
 ];
 
 // Mock data - in real app, this would come from API
-const mockFields: Field[] = [
-  { id: 1, name: 'Field A', farmId: 1, farmName: 'Main Farm', area: 10.5 },
-  { id: 2, name: 'Field B', farmId: 1, farmName: 'Main Farm', area: 8.2 },
-  { id: 3, name: 'Field C', farmId: 1, farmName: 'Main Farm', area: 12.0 },
-];
-
 const mockPesticides: InventoryItem[] = [
   {
     id: 1,
@@ -51,6 +50,7 @@ const mockTreatmentSchedules: TreatmentSchedule[] = [
     id: 1,
     fieldIds: [1, 2],
     fieldNames: ['Field A', 'Field B'],
+    cropIds: [1, 2], // Added cropIds
     pesticideId: 1,
     pesticideName: 'Organic Pesticide BT',
     dosage: 2.5,
@@ -65,6 +65,7 @@ const mockTreatmentSchedules: TreatmentSchedule[] = [
     id: 2,
     fieldIds: [3],
     fieldNames: ['Field C'],
+    cropIds: [3], // Added cropIds
     pesticideId: 2,
     pesticideName: 'Neem Oil Concentrate',
     dosage: 1.5,
@@ -81,17 +82,38 @@ export default function TreatmentPlanner() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showMSDSModal, setShowMSDSModal] = useState(false);
   const [selectedPesticide, setSelectedPesticide] = useState<InventoryItem | null>(null);
+  // In scheduleForm, use fieldId and cropId as strings
   const [scheduleForm, setScheduleForm] = useState({
-    fieldIds: [] as number[],
+    fieldId: '',
+    cropId: '',
     pesticideId: 0,
     dosage: '',
     scheduledDate: '',
     notes: '',
+    quantityUsed: '',
   });
+  const [showDatePicker, setShowDatePicker] = useState(false);
   
   const { hasPermission } = useAuth();
   const canCreateTreatment = hasPermission('treatments', 'create');
   const canExportData = hasPermission('treatments', 'export');
+
+  const operations = useOperationsContext();
+  const fields = operations.fields;
+  const crops = operations.crops;
+  const inventory = useInventoryContext();
+  const pesticides = inventory.inventoryItems.filter(item => item.category.toLowerCase().includes('pesticide'));
+  const requestQueue = useRequestQueueContext();
+
+  // Build fieldOptions and cropOptions from context
+  const fieldOptions = fields.map((field: any) => ({
+    label: `${field.name} (${field.farmName})`,
+    value: field.id.toString(),
+  }));
+  const cropOptions = crops.map((crop: any) => ({
+    label: `${crop.name} - ${crop.variety}`,
+    value: crop.id.toString(),
+  }));
 
   const renderTabButton = (tab: any) => (
     <TouchableOpacity
@@ -120,21 +142,31 @@ export default function TreatmentPlanner() {
 
   const handleSaveSchedule = () => {
     // Validate form
-    if (!scheduleForm.fieldIds.length || !scheduleForm.pesticideId || !scheduleForm.dosage || !scheduleForm.scheduledDate) {
+    if (!scheduleForm.fieldId || !scheduleForm.pesticideId || !scheduleForm.dosage || !scheduleForm.scheduledDate) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
 
-    // In real app, this would call POST /api/treatments
-    console.log('Saving treatment schedule:', scheduleForm);
-    
+    // Add a pending inventory request instead of deducting inventory
+    const selectedPesticide = pesticides.find(p => p.id === scheduleForm.pesticideId);
+    if (selectedPesticide) {
+      const qty = parseFloat(scheduleForm.quantityUsed) || 1;
+      requestQueue.addRequest({
+        type: 'treatment',
+        operationId: Date.now(), // Use timestamp as a unique operation id for now
+        productId: selectedPesticide.id,
+        quantity: qty,
+      });
+    }
     // Reset form and close modal
     setScheduleForm({
-      fieldIds: [],
+      fieldId: '',
+      cropId: '',
       pesticideId: 0,
       dosage: '',
       scheduledDate: '',
       notes: '',
+      quantityUsed: '',
     });
     setShowScheduleModal(false);
     Alert.alert('Success', 'Treatment scheduled successfully!');
@@ -189,6 +221,16 @@ export default function TreatmentPlanner() {
                 <MapPin size={16} color="#6B7280" />
                 <Text style={styles.detailText}>{schedule.fieldNames.join(', ')}</Text>
               </View>
+              {schedule.cropIds && schedule.cropIds.length > 0 && (
+                <View style={styles.detailRow}>
+                  <Sprout size={16} color="#6B7280" />
+                  <Text style={styles.detailText}>
+                    {schedule.cropIds.map(
+                      (id: number) => (operations.crops.find(c => c.id === id)?.name || '')
+                    ).join(', ')}
+                  </Text>
+                </View>
+              )}
               <View style={styles.detailRow}>
                 <Droplets size={16} color="#6B7280" />
                 <Text style={styles.detailText}>{schedule.dosage} {schedule.unit}</Text>
@@ -228,35 +270,32 @@ export default function TreatmentPlanner() {
 
         <ScrollView style={styles.modalContent}>
           <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>Select Fields *</Text>
-            <View style={styles.checkboxContainer}>
-              {mockFields.map((field) => (
-                <TouchableOpacity
-                  key={field.id}
-                  style={styles.checkboxItem}
-                  onPress={() => {
-                    const isSelected = scheduleForm.fieldIds.includes(field.id);
-                    setScheduleForm(prev => ({
-                      ...prev,
-                      fieldIds: isSelected 
-                        ? prev.fieldIds.filter(id => id !== field.id)
-                        : [...prev.fieldIds, field.id]
-                    }));
-                  }}
-                >
-                  <View style={[styles.checkbox, scheduleForm.fieldIds.includes(field.id) && styles.checkboxSelected]}>
-                    {scheduleForm.fieldIds.includes(field.id) && <Text style={styles.checkboxMark}>✓</Text>}
-                  </View>
-                  <Text style={styles.checkboxLabel}>{field.name} ({field.area} ha)</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <Text style={styles.formLabel}>Select Field *</Text>
+            <Dropdown
+              label="Field *"
+              options={fieldOptions}
+              value={scheduleForm.fieldId}
+              onSelect={value => setScheduleForm(prev => ({ ...prev, fieldId: value }))}
+              placeholder="Select field"
+              required
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Select Crop</Text>
+            <Dropdown
+              label="Crop"
+              options={cropOptions}
+              value={scheduleForm.cropId}
+              onSelect={value => setScheduleForm(prev => ({ ...prev, cropId: value }))}
+              placeholder="Select crop"
+            />
           </View>
 
           <View style={styles.formGroup}>
             <Text style={styles.formLabel}>Select Pesticide *</Text>
             <View style={styles.pesticideContainer}>
-              {mockPesticides.map((pesticide) => (
+              {pesticides.map((pesticide) => (
                 <TouchableOpacity
                   key={pesticide.id}
                   style={[styles.pesticideItem, scheduleForm.pesticideId === pesticide.id && styles.pesticideSelected]}
@@ -287,11 +326,32 @@ export default function TreatmentPlanner() {
 
           <View style={styles.formGroup}>
             <Text style={styles.formLabel}>Scheduled Date *</Text>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.formInput}>
+              <Text>{scheduleForm.scheduledDate}</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={new Date(scheduleForm.scheduledDate)}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setScheduleForm(prev => ({ ...prev, scheduledDate: selectedDate.toISOString().split('T')[0] }));
+                  }
+                }}
+              />
+            )}
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Quantity Used *</Text>
             <TextInput
               style={styles.formInput}
-              value={scheduleForm.scheduledDate}
-              onChangeText={(text) => setScheduleForm(prev => ({ ...prev, scheduledDate: text }))}
-              placeholder="YYYY-MM-DD"
+              value={scheduleForm.quantityUsed}
+              onChangeText={text => setScheduleForm(prev => ({ ...prev, quantityUsed: text }))}
+              placeholder="Enter quantity used"
+              keyboardType="numeric"
             />
           </View>
 
@@ -403,7 +463,7 @@ export default function TreatmentPlanner() {
       </View>
 
       {activeTab === 'calendar' && renderCalendarView()}
-      {activeTab === 'schedule' && renderCalendarView()}
+      {activeTab === 'schedule' && renderScheduleForm()}
       {activeTab === 'history' && renderHistoryView()}
       
       {renderScheduleForm()}

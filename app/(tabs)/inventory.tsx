@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Switch, TextInput, Modal } from 'react-native';
-import { Package, ArrowUp, ArrowDown, TriangleAlert as AlertTriangle, TrendingDown, Plus, Search, Filter, Calendar, Camera, Scan, Users, DollarSign, Clock, MapPin } from 'lucide-react-native';
+import { Package, ArrowUp, ArrowDown, TriangleAlert as AlertTriangle, TrendingDown, Plus, Search, Filter, Calendar, Camera, Scan, Users, DollarSign, Clock, MapPin, X } from 'lucide-react-native';
+import { useRequestQueueContext } from '@/hooks/useRequestQueue';
+import { useInventoryContext } from '@/hooks/useInventory';
 
 const inventoryTabs = [
   { id: 'items', title: 'Items', icon: 'package' },
@@ -8,6 +10,7 @@ const inventoryTabs = [
   { id: 'alerts', title: 'Alerts', icon: 'alert' },
   { id: 'suppliers', title: 'Suppliers', icon: 'users' },
   { id: 'valuation', title: 'Valuation', icon: 'dollarsign' },
+  { id: 'requests', title: 'Requests', icon: 'alert' },
 ];
 
 const inventoryItems = [
@@ -188,6 +191,8 @@ export default function Inventory() {
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const categories = ['All', 'Fertilizers', 'Pesticides', 'Seeds', 'Equipment', 'Harvested Goods'];
+  const requestQueue = useRequestQueueContext();
+  const inventory = useInventoryContext();
 
   const renderTabButton = (tab: any) => (
     <TouchableOpacity
@@ -210,16 +215,31 @@ export default function Inventory() {
 
   const renderInventoryItems = () => (
     <View style={styles.contentContainer}>
-      <View style={styles.tableHeader}>
-        <Text style={styles.tableHeaderText}>Inventory Items</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.scanButton} onPress={() => setShowBarcodeScanner(true)}>
-            <Scan size={16} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
-            <Plus size={16} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>Add Item</Text>
-          </TouchableOpacity>
+      {/* Summary Cards */}
+      <View style={styles.summaryCards}>
+        <View style={styles.summaryCard}>
+          <Package size={24} color="#10B981" />
+          <Text style={styles.summaryCardValue}>24</Text>
+          <Text style={styles.summaryCardLabel}>Total Items</Text>
+          <Text style={styles.summaryCardSubtext}>$45,520 Value</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <AlertTriangle size={24} color="#F59E0B" />
+          <Text style={styles.summaryCardValue}>3</Text>
+          <Text style={styles.summaryCardLabel}>Low Stock</Text>
+          <Text style={styles.summaryCardSubtext}>Need Reorder</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <TrendingDown size={24} color="#EF4444" />
+          <Text style={styles.summaryCardValue}>1</Text>
+          <Text style={styles.summaryCardLabel}>Critical</Text>
+          <Text style={styles.summaryCardSubtext}>Urgent Action</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <Clock size={24} color="#8B5CF6" />
+          <Text style={styles.summaryCardValue}>2</Text>
+          <Text style={styles.summaryCardLabel}>Expiring</Text>
+          <Text style={styles.summaryCardSubtext}>Next 6 Months</Text>
         </View>
       </View>
 
@@ -253,79 +273,60 @@ export default function Inventory() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      
-      {/* Summary Cards */}
-      <View style={styles.summaryCards}>
-        <View style={styles.summaryCard}>
-          <Package size={24} color="#10B981" />
-          <Text style={styles.summaryCardValue}>24</Text>
-          <Text style={styles.summaryCardLabel}>Total Items</Text>
-          <Text style={styles.summaryCardSubtext}>$45,520 Value</Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <AlertTriangle size={24} color="#F59E0B" />
-          <Text style={styles.summaryCardValue}>3</Text>
-          <Text style={styles.summaryCardLabel}>Low Stock</Text>
-          <Text style={styles.summaryCardSubtext}>Need Reorder</Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <TrendingDown size={24} color="#EF4444" />
-          <Text style={styles.summaryCardValue}>1</Text>
-          <Text style={styles.summaryCardLabel}>Critical</Text>
-          <Text style={styles.summaryCardSubtext}>Urgent Action</Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <Clock size={24} color="#8B5CF6" />
-          <Text style={styles.summaryCardValue}>2</Text>
-          <Text style={styles.summaryCardLabel}>Expiring</Text>
-          <Text style={styles.summaryCardSubtext}>Next 6 Months</Text>
+
+      {/* Add Item Button */}
+      <View style={styles.tableHeader}>
+        <Text style={styles.tableHeaderText}>Inventory Items</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.scanButton} onPress={() => setShowBarcodeScanner(true)}>
+            <Scan size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
+            <Plus size={16} color="#FFFFFF" />
+            <Text style={styles.addButtonText}>Add Item</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Items Table */}
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={[styles.tableCell, styles.tableCellHeader, { flex: 2 }]}>Item Details</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Stock</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Value</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Status</Text>
-        </View>
+      {/* Items List as Cards */}
+      <ScrollView
+        style={styles.itemsList}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
         {inventoryItems.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.tableRow}>
-            <View style={[styles.tableCell, { flex: 2 }]}>
+          <TouchableOpacity key={item.id} style={styles.itemCard}>
+            <View style={styles.itemCardHeader}>
               <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemDetails}>{item.category} • {item.supplier}</Text>
-              <Text style={styles.itemLocation}>📍 {item.location}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: getStockStatusColor(item.status) + '20' }]}>
+                <Text style={[styles.statusText, { color: getStockStatusColor(item.status) }]}>
+                  {item.status}
+                </Text>
+              </View>
             </View>
-            <View style={styles.tableCell}>
-              <Text style={styles.stockText}>{item.stock} {item.unit}</Text>
-              <Text style={styles.minStockText}>Min: {item.minStock}</Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={styles.valueText}>${item.totalValue.toLocaleString()}</Text>
-              <Text style={styles.unitCostText}>${item.costPerUnit}/unit</Text>
-            </View>
-            <View style={[styles.statusBadge, { backgroundColor: getStockStatusColor(item.status) + '20' }]}>
-              <Text style={[styles.statusText, { color: getStockStatusColor(item.status) }]}>
-                {item.status}
-              </Text>
+            <Text style={styles.itemDetails}>{item.category} • {item.supplier}</Text>
+            <Text style={styles.itemLocation}>📍 {item.location}</Text>
+            <View style={styles.itemCardRow}>
+              <View style={styles.itemCardCol}>
+                <Text style={styles.stockText}>{item.stock} {item.unit}</Text>
+                <Text style={styles.minStockText}>Min: {item.minStock}</Text>
+              </View>
+              <View style={styles.itemCardCol}>
+                <Text style={styles.valueText}>${item.totalValue.toLocaleString()}</Text>
+                <Text style={styles.unitCostText}>${item.costPerUnit}/unit</Text>
+              </View>
+              <View style={styles.itemCardCol}>
+                <Text style={styles.expiryText}>{item.expiryDate ? `Exp: ${item.expiryDate}` : ''}</Text>
+              </View>
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 
   const renderTransactions = () => (
     <View style={styles.contentContainer}>
-      <View style={styles.tableHeader}>
-        <Text style={styles.tableHeaderText}>Inventory Transactions</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
-          <Plus size={16} color="#FFFFFF" />
-          <Text style={styles.addButtonText}>Add Transaction</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Transaction Summary */}
       <View style={styles.transactionSummary}>
         <View style={styles.summaryItem}>
@@ -339,51 +340,61 @@ export default function Inventory() {
           <Text style={styles.summaryValue}>-$182.50</Text>
         </View>
       </View>
-      
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Date/Time</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader, { flex: 2 }]}>Transaction Details</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Type</Text>
-          <Text style={[styles.tableCell, styles.tableCellHeader]}>Impact</Text>
-        </View>
+
+      {/* Add Transaction Button */}
+      <View style={styles.tableHeader}>
+        <Text style={styles.tableHeaderText}>Inventory Transactions</Text>
+        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
+          <Plus size={16} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>Add Transaction</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Transactions List as Cards */}
+      <ScrollView
+        style={styles.transactionsList}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
         {transactions.map((transaction) => (
-          <TouchableOpacity key={transaction.id} style={styles.tableRow}>
-            <View style={styles.tableCell}>
-              <Text style={styles.dateText}>{transaction.date}</Text>
-              <Text style={styles.timeText}>{transaction.time}</Text>
-            </View>
-            <View style={[styles.tableCell, { flex: 2 }]}>
+          <TouchableOpacity key={transaction.id} style={styles.transactionCard}>
+            <View style={styles.transactionCardHeader}>
               <Text style={styles.itemName}>{transaction.item}</Text>
-              <Text style={styles.transactionReason}>{transaction.reason}</Text>
-              <Text style={styles.operatorText}>By: {transaction.operator}</Text>
-              {transaction.field && <Text style={styles.fieldText}>📍 {transaction.field}</Text>}
+              <View style={styles.transactionType}>
+                {transaction.type === 'Stock In' ? (
+                  <ArrowUp size={16} color="#10B981" />
+                ) : (
+                  <ArrowDown size={16} color="#EF4444" />
+                )}
+                <Text style={[styles.transactionTypeText, {
+                  color: transaction.type === 'Stock In' ? '#10B981' : '#EF4444'
+                }]}> {transaction.type}</Text>
+              </View>
             </View>
-            <View style={styles.transactionType}>
-              {transaction.type === 'Stock In' ? (
-                <ArrowUp size={16} color="#10B981" />
-              ) : (
-                <ArrowDown size={16} color="#EF4444" />
-              )}
-              <Text style={[styles.transactionTypeText, { 
-                color: transaction.type === 'Stock In' ? '#10B981' : '#EF4444' 
-              }]}>
-                {transaction.quantity} units
-              </Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={[styles.costImpactText, { 
-                color: transaction.costImpact > 0 ? '#10B981' : '#EF4444' 
-              }]}>
-                ${Math.abs(transaction.costImpact).toLocaleString()}
-              </Text>
+            <Text style={styles.transactionReason}>{transaction.reason}</Text>
+            <View style={styles.transactionCardRow}>
+              <View style={styles.transactionCardCol}>
+                <Text style={styles.dateText}>{transaction.date}</Text>
+                <Text style={styles.timeText}>{transaction.time}</Text>
+              </View>
+              <View style={styles.transactionCardCol}>
+                <Text style={styles.operatorText}>By: {transaction.operator}</Text>
+                {transaction.field && <Text style={styles.fieldText}>📍 {transaction.field}</Text>}
+              </View>
+              <View style={styles.transactionCardCol}>
+                <Text style={[styles.costImpactText, {
+                  color: transaction.costImpact > 0 ? '#10B981' : '#EF4444'
+                }]}>${Math.abs(transaction.costImpact).toLocaleString()}</Text>
+                <Text style={styles.transactionQuantity}>{transaction.quantity} units</Text>
+              </View>
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 
+  // Alerts sub-tab redesign
   const renderAlerts = () => (
     <View style={styles.contentContainer}>
       <View style={styles.tableHeader}>
@@ -392,19 +403,16 @@ export default function Inventory() {
           <Text style={styles.alertsBadgeText}>{alerts.length} Active Alerts</Text>
         </View>
       </View>
-      
-      <View style={styles.alertsList}>
+      <ScrollView style={styles.alertsList} contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
         {alerts.map((alert) => (
-          <View key={alert.id} style={[styles.alertCard, { borderLeftColor: getAlertColor(alert.severity) }]}>
+          <View key={alert.id} style={[styles.alertCard, { borderLeftColor: getAlertColor(alert.severity) }]}> 
             <View style={styles.alertHeader}>
               <View style={styles.alertTitleContainer}>
                 <AlertTriangle size={20} color={getAlertColor(alert.severity)} />
                 <Text style={styles.alertTitle}>{alert.type}</Text>
               </View>
-              <View style={[styles.severityBadge, { backgroundColor: getAlertColor(alert.severity) + '20' }]}>
-                <Text style={[styles.severityText, { color: getAlertColor(alert.severity) }]}>
-                  {alert.severity}
-                </Text>
+              <View style={[styles.severityBadge, { backgroundColor: getAlertColor(alert.severity) + '20' }]}> 
+                <Text style={[styles.severityText, { color: getAlertColor(alert.severity) }]}>{alert.severity}</Text>
               </View>
             </View>
             <Text style={styles.alertItem}>{alert.item}</Text>
@@ -435,10 +443,11 @@ export default function Inventory() {
             </View>
           </View>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 
+  // Suppliers sub-tab redesign
   const renderSuppliers = () => (
     <View style={styles.contentContainer}>
       <View style={styles.tableHeader}>
@@ -448,8 +457,7 @@ export default function Inventory() {
           <Text style={styles.addButtonText}>Add Supplier</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.suppliersList}>
+      <ScrollView style={styles.suppliersList} contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
         {suppliers.map((supplier) => (
           <TouchableOpacity key={supplier.id} style={styles.supplierCard}>
             <View style={styles.supplierHeader}>
@@ -465,20 +473,17 @@ export default function Inventory() {
                 <Text style={styles.totalPurchasesLabel}>Total Purchases</Text>
               </View>
             </View>
-            
             <View style={styles.supplierDetails}>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactPerson}>👤 {supplier.contactPerson}</Text>
                 <Text style={styles.contactDetail}>📞 {supplier.phone}</Text>
                 <Text style={styles.contactDetail}>✉️ {supplier.email}</Text>
               </View>
-              
               <View style={styles.orderInfo}>
                 <Text style={styles.lastOrder}>Last Order: {supplier.lastOrder}</Text>
                 <Text style={styles.paymentTerms}>Terms: {supplier.paymentTerms}</Text>
               </View>
             </View>
-
             <View style={styles.supplierActions}>
               <TouchableOpacity style={styles.supplierActionButton}>
                 <Text style={styles.supplierActionText}>View History</Text>
@@ -492,10 +497,11 @@ export default function Inventory() {
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 
+  // Valuation sub-tab redesign
   const renderValuation = () => (
     <View style={styles.contentContainer}>
       <View style={styles.tableHeader}>
@@ -505,8 +511,6 @@ export default function Inventory() {
           <Text style={styles.valuationDateText}>As of Jan 15, 2025</Text>
         </View>
       </View>
-
-      {/* Valuation Summary */}
       <View style={styles.valuationSummary}>
         <View style={styles.valuationCard}>
           <Text style={styles.valuationLabel}>Total Inventory Value</Text>
@@ -514,12 +518,9 @@ export default function Inventory() {
           <Text style={styles.valuationChange}>+5.2% from last month</Text>
         </View>
       </View>
-
-      {/* Valuation by Category */}
+      <Text style={styles.sectionSubtitle}>Valuation by Category</Text>
       <View style={styles.categoryValuation}>
-        <Text style={styles.sectionSubtitle}>Valuation by Category</Text>
-        {[
-          { category: 'Fertilizers', value: 18500, percentage: 40.6, items: 8 },
+        {[{ category: 'Fertilizers', value: 18500, percentage: 40.6, items: 8 },
           { category: 'Seeds', value: 15200, percentage: 33.4, items: 6 },
           { category: 'Pesticides', value: 8800, percentage: 19.3, items: 5 },
           { category: 'Equipment', value: 3020, percentage: 6.6, items: 5 }
@@ -537,8 +538,6 @@ export default function Inventory() {
           </View>
         ))}
       </View>
-
-      {/* Valuation Methods */}
       <View style={styles.valuationMethods}>
         <Text style={styles.sectionSubtitle}>Valuation Method</Text>
         <View style={styles.methodSelector}>
@@ -557,6 +556,37 @@ export default function Inventory() {
     </View>
   );
 
+  const renderRequests = () => (
+    <View style={styles.contentContainer}>
+      <View style={styles.tableHeader}>
+        <Text style={styles.tableHeaderText}>Inventory Requests</Text>
+      </View>
+      <ScrollView style={styles.requestsList} contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
+        {requestQueue.requests.map((req) => (
+          <View key={req.id} style={styles.requestCard}>
+            <Text style={styles.requestType}>{req.type.charAt(0).toUpperCase() + req.type.slice(1)}</Text>
+            <Text style={styles.requestDetail}>Product ID: {req.productId}</Text>
+            <Text style={styles.requestDetail}>Quantity: {req.quantity}</Text>
+            <Text style={styles.requestDetail}>Status: {req.status.charAt(0).toUpperCase() + req.status.slice(1)}</Text>
+            {req.status === 'pending' && (
+              <View style={styles.requestActions}>
+                <TouchableOpacity style={styles.acceptButton} onPress={() => {
+                  requestQueue.acceptRequest(req.id);
+                  inventory.deductInventoryQuantity(req.productId, req.quantity);
+                }}>
+                  <Text style={styles.acceptButtonText}>Accept</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.rejectButton} onPress={() => requestQueue.rejectRequest(req.id)}>
+                  <Text style={styles.rejectButtonText}>Reject</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case 'items':
@@ -569,6 +599,8 @@ export default function Inventory() {
         return renderSuppliers();
       case 'valuation':
         return renderValuation();
+      case 'requests':
+        return renderRequests();
       default:
         return renderInventoryItems();
     }
@@ -606,6 +638,33 @@ export default function Inventory() {
           </View>
         </View>
       </Modal>
+
+      {/* Add/Edit Item Modal */}
+      <Modal visible={showAddModal} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Item</Text>
+            <TouchableOpacity onPress={() => setShowAddModal(false)}>
+              <X size={24} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            {/* Example input fields, update as needed for your form */}
+            <View style={styles.formGroup}>
+              <Text style={styles.inputLabel}>Item Name</Text>
+              <TextInput style={styles.input} placeholder="Enter item name" />
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.inputLabel}>Category</Text>
+              <TextInput style={styles.input} placeholder="Enter category" />
+            </View>
+            {/* Add more fields as needed */}
+            <TouchableOpacity style={styles.saveButton}>
+              <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -634,10 +693,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   header: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 32,
+    paddingBottom: 20,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    alignItems: 'flex-start',
   },
   title: {
     fontSize: 28,
@@ -653,27 +715,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 8,
+    flexDirection: 'row',
   },
   tabButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: '#F3F4F6',
+    marginRight: 8,
+    minHeight: 36,
+    minWidth: 80,
+    height: 'auto',
   },
   tabButtonActive: {
     backgroundColor: '#10B981',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabIcon: {
     marginRight: 8,
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     color: '#6B7280',
   },
   tabTextActive: {
@@ -706,7 +777,6 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 8,
   },
   scanButton: {
     backgroundColor: '#3B82F6',
@@ -783,7 +853,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    gap: 8,
   },
   summaryCard: {
     flex: 1,
@@ -1276,5 +1345,193 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     textAlign: 'center',
+  },
+  itemsList: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  itemCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  itemCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  itemCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    gap: 12,
+  },
+  itemCardCol: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  expiryText: {
+    fontSize: 12,
+    color: '#8B5CF6',
+    fontWeight: '500',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  modalContent: {
+    flex: 1,
+  },
+  formGroup: {
+    marginBottom: 18,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#374151',
+    marginBottom: 6,
+    fontWeight: '500',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#111827',
+    backgroundColor: '#F9FAFB',
+  },
+  saveButton: {
+    backgroundColor: '#10B981',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  transactionsList: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  transactionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  transactionCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  transactionCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    gap: 12,
+  },
+  transactionCardCol: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  transactionQuantity: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  requestsList: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  requestCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  requestType: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  requestDetail: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  requestActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  acceptButton: {
+    flex: 1,
+    backgroundColor: '#10B981',
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  acceptButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  rejectButton: {
+    flex: 1,
+    backgroundColor: '#EF4444',
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  rejectButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
 });

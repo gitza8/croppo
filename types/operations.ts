@@ -109,6 +109,7 @@ export interface Treatment {
   humidity?: number;
   attachments: string[];
   taskId?: number; // Link to Task as per PRD
+  status: 'pending' | 'confirmed' | 'rejected';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -134,6 +135,7 @@ export interface Fertilization {
   actualResponse?: string;
   attachments: string[];
   taskId?: number; // Link to Task as per PRD
+  status: 'pending' | 'confirmed' | 'rejected';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -381,6 +383,7 @@ export interface TreatmentSchedule {
   id: number;
   fieldIds: number[];
   fieldNames: string[];
+  cropIds: number[]; // Added for real-time crop selection
   pesticideId: number;
   pesticideName: string;
   dosage: number;

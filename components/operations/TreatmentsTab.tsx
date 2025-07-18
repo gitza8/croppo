@@ -386,7 +386,6 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 8,
   },
   actionButton: {
     padding: 4,
@@ -418,7 +417,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    gap: 12,
   },
   cancelButton: {
     flex: 1,
@@ -428,6 +426,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     alignItems: 'center',
+    marginRight: 12,
   },
   cancelButtonText: {
     fontSize: 16,

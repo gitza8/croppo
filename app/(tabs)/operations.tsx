@@ -6,7 +6,7 @@ import FarmsFieldsCropsTab from '@/components/operations/FarmsFieldsCropsTab';
 import TasksTab from '@/components/operations/TasksTab';
 import PlantingsTab from '@/components/operations/PlantingsTab';
 import HarvestsTab from '@/components/operations/HarvestsTab';
-import TreatmentsTab from '@/components/operations/TreatmentsTab';
+import TreatmentPlanner from './treatments';
 import FertilizationTab from '@/components/operations/FertilizationTab';
 import IrrigationTab from '@/components/operations/IrrigationTab';
 import IPMTab from '@/components/operations/IPMTab';
@@ -59,7 +59,7 @@ export default function Operations() {
       case 'harvests':
         return <HarvestsTab operationsData={operationsData} />;
       case 'treatments':
-        return <TreatmentsTab operationsData={operationsData} />;
+        return <TreatmentPlanner />;
       case 'fertilization':
         return <FertilizationTab operationsData={operationsData} />;
       case 'irrigation':

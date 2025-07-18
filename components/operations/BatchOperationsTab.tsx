@@ -210,50 +210,16 @@ export default function BatchOperationsTab({ operationsData }: BatchOperationsTa
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingOperation ? 'Edit Batch Operation' : 'Create Batch Operation'}
+                {editingOperation ? 'Edit Batch Operation' : 'Schedule Batch Operation'}
               </Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <X size={24} color="#6B7280" />
+                <Text style={{ color: '#3B82F6', fontSize: 16 }}>Cancel</Text>
               </TouchableOpacity>
             </View>
-
             <ScrollView style={styles.modalContent}>
-              <FormField
-                label="Operation Name"
-                value={formData.name}
-                onChangeText={(text) => setFormData({ ...formData, name: text })}
-                placeholder="Enter operation name"
-                required
-              />
-
-              <Dropdown
-                label="Operation Type"
-                options={operationTypeOptions}
-                value={formData.operationType}
-                onSelect={(value) => setFormData({ ...formData, operationType: value })}
-                placeholder="Select operation type"
-                required
-              />
-
-              <FormField
-                label="Date"
-                value={formData.date}
-                onChangeText={(text) => setFormData({ ...formData, date: text })}
-                placeholder="YYYY-MM-DD"
-                required
-              />
-
-              <FormField
-                label="Operator"
-                value={formData.operator}
-                onChangeText={(text) => setFormData({ ...formData, operator: text })}
-                placeholder="Enter operator name"
-                required
-              />
-
-              <Text style={styles.fieldSelectionLabel}>Select Fields *</Text>
+              <Text style={styles.sectionHeader}>Select Fields *</Text>
               <View style={styles.fieldSelection}>
-                {fieldOptions.map((field) => (
+                {fieldOptions.map((field: any) => (
                   <TouchableOpacity
                     key={field.value}
                     style={[
@@ -284,43 +250,64 @@ export default function BatchOperationsTab({ operationsData }: BatchOperationsTa
                   </TouchableOpacity>
                 ))}
               </View>
-
-              {(formData.operationType === 'Fertilization' || formData.operationType === 'Treatment') && (
-                <>
-                  <FormField
-                    label="Product Name"
-                    value={formData.productName}
-                    onChangeText={(text) => setFormData({ ...formData, productName: text })}
-                    placeholder="Enter product name"
-                  />
-
-                  <FormField
-                    label="Rate"
-                    value={formData.rate}
-                    onChangeText={(text) => setFormData({ ...formData, rate: text })}
-                    placeholder="Enter application rate"
-                    keyboardType="numeric"
-                  />
-
-                  <Dropdown
-                    label="Unit"
-                    options={unitOptions}
-                    value={formData.unit}
-                    onSelect={(value) => setFormData({ ...formData, unit: value })}
-                    placeholder="Select unit"
-                  />
-                </>
-              )}
-
+              <Text style={styles.sectionHeader}>Batch Operation Details</Text>
+              <FormField
+                label="Name"
+                value={formData.name}
+                onChangeText={(text) => setFormData({ ...formData, name: text })}
+                placeholder="Enter operation name"
+                required
+              />
+              <Dropdown
+                label="Operation Type"
+                options={operationTypeOptions}
+                value={formData.operationType}
+                onSelect={(value) => setFormData({ ...formData, operationType: value })}
+                placeholder="Select operation type"
+                required
+              />
+              <FormField
+                label="Date"
+                value={formData.date}
+                onChangeText={(text) => setFormData({ ...formData, date: text })}
+                placeholder="YYYY-MM-DD"
+                required
+              />
+              <FormField
+                label="Operator"
+                value={formData.operator}
+                onChangeText={(text) => setFormData({ ...formData, operator: text })}
+                placeholder="Enter operator name"
+                required
+              />
+              <FormField
+                label="Product Name"
+                value={formData.productName}
+                onChangeText={(text) => setFormData({ ...formData, productName: text })}
+                placeholder="Enter product name"
+              />
+              <FormField
+                label="Rate"
+                value={formData.rate}
+                onChangeText={(text) => setFormData({ ...formData, rate: text })}
+                placeholder="Enter application rate"
+                keyboardType="numeric"
+              />
+              <Dropdown
+                label="Unit"
+                options={unitOptions}
+                value={formData.unit}
+                onSelect={(value) => setFormData({ ...formData, unit: value })}
+                placeholder="Select unit"
+              />
               <FormField
                 label="Notes"
                 value={formData.notes}
                 onChangeText={(text) => setFormData({ ...formData, notes: text })}
-                placeholder="Enter additional notes"
+                placeholder="Enter notes"
                 multiline
               />
             </ScrollView>
-
             <View style={styles.modalActions}>
               <TouchableOpacity 
                 style={styles.cancelButton} 
@@ -330,7 +317,7 @@ export default function BatchOperationsTab({ operationsData }: BatchOperationsTa
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                 <Text style={styles.saveButtonText}>
-                  {editingOperation ? 'Update' : 'Create'}
+                  {editingOperation ? 'Update' : 'Save'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -525,5 +512,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    marginTop: 16,
   },
 });

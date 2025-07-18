@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
 import { ChevronDown, Check } from 'lucide-react-native';
+import { colors, typography, spacing, radii } from './designSystem';
 
 interface DropdownOption {
   label: string;
@@ -90,43 +91,43 @@ export default function Dropdown({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 8,
+    fontSize: typography.fontSize.sm,
+    fontWeight: '500', // use valid RN value
+    color: colors.muted,
+    marginBottom: spacing.sm,
   },
   required: {
-    color: '#EF4444',
+    color: colors.danger,
   },
   dropdown: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
   },
   dropdownError: {
-    borderColor: '#EF4444',
+    borderColor: colors.danger,
   },
   dropdownText: {
-    fontSize: 16,
-    color: '#111827',
+    fontSize: typography.fontSize.md,
+    color: colors.text,
     flex: 1,
   },
   placeholder: {
-    color: '#9CA3AF',
+    color: colors.placeholder,
   },
   errorText: {
-    fontSize: 12,
-    color: '#EF4444',
-    marginTop: 4,
+    fontSize: typography.fontSize.xs,
+    color: colors.danger,
+    marginTop: spacing.xs,
   },
   overlay: {
     flex: 1,
@@ -135,11 +136,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modal: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     maxHeight: 300,
     width: '80%',
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -152,21 +153,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.background,
   },
   selectedOption: {
-    backgroundColor: '#10B981' + '20',
+    backgroundColor: colors.primary + '20',
   },
   optionText: {
-    fontSize: 16,
-    color: '#111827',
+    fontSize: typography.fontSize.md,
+    color: colors.text,
     flex: 1,
   },
   selectedOptionText: {
-    color: '#10B981',
-    fontWeight: '500',
+    color: colors.primary,
+    fontWeight: '500', // use valid RN value
   },
 });

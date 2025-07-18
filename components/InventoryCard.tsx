@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Package, TriangleAlert as AlertTriangle, TrendingDown } from 'lucide-react-native';
+import { colors, typography, spacing, radii } from './designSystem';
 
 interface InventoryCardProps {
   item: {
@@ -94,23 +95,23 @@ export default function InventoryCard({ item, onPress }: InventoryCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -118,58 +119,58 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleText: {
-    marginLeft: 12,
+    marginLeft: spacing.md,
     flex: 1,
   },
   itemName: {
-    fontSize: 16,
+    fontSize: typography.fontSize.md,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   category: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: typography.fontSize.xs,
+    color: colors.subtitle,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.sm,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: typography.fontSize.xs,
     fontWeight: '500',
   },
   stockInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
+    marginBottom: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.background,
+    borderRadius: radii.md,
   },
   stockContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   stockValue: {
-    fontSize: 24,
+    fontSize: typography.fontSize.xxl,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
   },
   stockUnit: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginLeft: 4,
+    fontSize: typography.fontSize.sm,
+    color: colors.subtitle,
+    marginLeft: spacing.xs,
   },
   minStock: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: typography.fontSize.xs,
+    color: colors.subtitle,
   },
   details: {
-    gap: 6,
+    gap: spacing.xs,
   },
   detailRow: {
     flexDirection: 'row',
@@ -177,12 +178,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: typography.fontSize.xs,
+    color: colors.subtitle,
   },
   detailValue: {
-    fontSize: 12,
+    fontSize: typography.fontSize.xs,
     fontWeight: '500',
-    color: '#111827',
+    color: colors.text,
   },
 });

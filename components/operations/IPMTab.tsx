@@ -225,22 +225,14 @@ export default function IPMTab({ operationsData }: IPMTabProps) {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingRecord ? 'Edit IPM Record' : 'Add IPM Record'}
+                {editingRecord ? 'Edit IPM Record' : 'Schedule IPM Record'}
               </Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <X size={24} color="#6B7280" />
+                <Text style={{ color: '#3B82F6', fontSize: 16 }}>Cancel</Text>
               </TouchableOpacity>
             </View>
-
             <ScrollView style={styles.modalContent}>
-              <FormField
-                label="Date"
-                value={formData.date}
-                onChangeText={(text) => setFormData({ ...formData, date: text })}
-                placeholder="YYYY-MM-DD"
-                required
-              />
-
+              <Text style={styles.sectionHeader}>Select Field *</Text>
               <Dropdown
                 label="Field"
                 options={fieldOptions}
@@ -249,52 +241,57 @@ export default function IPMTab({ operationsData }: IPMTabProps) {
                 placeholder="Select field"
                 required
               />
-
-              <Dropdown
-                label="Pest Type"
-                options={pestOptions}
-                value={formData.pest}
-                onSelect={(value) => setFormData({ ...formData, pest: value })}
-                placeholder="Select pest type"
+              <Text style={styles.sectionHeader}>IPM Details</Text>
+              <FormField
+                label="Date"
+                value={formData.date}
+                onChangeText={(text) => setFormData({ ...formData, date: text })}
+                placeholder="YYYY-MM-DD"
                 required
               />
-
+              <FormField
+                label="Pest"
+                value={formData.pest}
+                onChangeText={(text) => setFormData({ ...formData, pest: text })}
+                placeholder="Enter pest name"
+                required
+              />
               <FormField
                 label="Count"
                 value={formData.count}
                 onChangeText={(text) => setFormData({ ...formData, count: text })}
                 placeholder="Enter pest count"
                 keyboardType="numeric"
-                required
               />
-
               <FormField
                 label="Threshold"
                 value={formData.threshold}
                 onChangeText={(text) => setFormData({ ...formData, threshold: text })}
-                placeholder="Enter action threshold"
+                placeholder="Enter threshold"
                 keyboardType="numeric"
-                required
               />
-
               <Dropdown
                 label="Severity"
                 options={severityOptions}
                 value={formData.severity}
                 onSelect={(value) => setFormData({ ...formData, severity: value })}
-                placeholder="Select severity level"
-                required
+                placeholder="Select severity"
               />
-
               <Dropdown
-                label="Action Taken"
+                label="Action"
                 options={actionOptions}
                 value={formData.action}
                 onSelect={(value) => setFormData({ ...formData, action: value })}
-                placeholder="Select action taken"
+                placeholder="Select action"
                 required
               />
-
+              <FormField
+                label="Notes"
+                value={formData.notes}
+                onChangeText={(text) => setFormData({ ...formData, notes: text })}
+                placeholder="Enter notes"
+                multiline
+              />
               <Dropdown
                 label="Scouting Method"
                 options={scoutingMethodOptions}
@@ -302,30 +299,20 @@ export default function IPMTab({ operationsData }: IPMTabProps) {
                 onSelect={(value) => setFormData({ ...formData, scoutingMethod: value })}
                 placeholder="Select scouting method"
               />
-
+              <FormField
+                label="Weather Conditions"
+                value={formData.weatherConditions}
+                onChangeText={(text) => setFormData({ ...formData, weatherConditions: text })}
+                placeholder="Enter weather conditions"
+                multiline
+              />
               <FormField
                 label="Crop Growth Stage"
                 value={formData.cropGrowthStage}
                 onChangeText={(text) => setFormData({ ...formData, cropGrowthStage: text })}
                 placeholder="Enter crop growth stage"
               />
-
-              <FormField
-                label="Weather Conditions"
-                value={formData.weatherConditions}
-                onChangeText={(text) => setFormData({ ...formData, weatherConditions: text })}
-                placeholder="Enter weather conditions"
-              />
-
-              <FormField
-                label="Notes"
-                value={formData.notes}
-                onChangeText={(text) => setFormData({ ...formData, notes: text })}
-                placeholder="Enter additional notes"
-                multiline
-              />
             </ScrollView>
-
             <View style={styles.modalActions}>
               <TouchableOpacity 
                 style={styles.cancelButton} 
@@ -484,5 +471,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 20,
+    marginBottom: 8,
   },
 });

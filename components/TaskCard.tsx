@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Clock, Users, MapPin, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import { colors, typography, spacing, radii } from './designSystem';
 
 interface TaskCardProps {
   task: {
@@ -20,28 +21,28 @@ interface TaskCardProps {
 export default function TaskCard({ task, onPress, onStatusChange }: TaskCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'To Do': return '#F59E0B';
-      case 'In Progress': return '#3B82F6';
-      case 'Done': return '#10B981';
-      default: return '#6B7280';
+      case 'To Do': return colors.warning;
+      case 'In Progress': return colors.primary;
+      case 'Done': return colors.success;
+      default: return colors.subtitle;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'High': return '#EF4444';
-      case 'Medium': return '#F59E0B';
-      case 'Low': return '#10B981';
-      default: return '#6B7280';
+      case 'High': return colors.danger;
+      case 'Medium': return colors.warning;
+      case 'Low': return colors.success;
+      default: return colors.subtitle;
     }
   };
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case 'High': return <AlertTriangle size={16} color="#EF4444" />;
-      case 'Medium': return <Clock size={16} color="#F59E0B" />;
-      case 'Low': return <CheckCircle size={16} color="#10B981" />;
-      default: return <Clock size={16} color="#6B7280" />;
+      case 'High': return <AlertTriangle size={16} color={colors.danger} />;
+      case 'Medium': return <Clock size={16} color={colors.warning} />;
+      case 'Low': return <CheckCircle size={16} color={colors.success} />;
+      default: return <Clock size={16} color={colors.subtitle} />;
     }
   };
 
@@ -74,20 +75,20 @@ export default function TaskCard({ task, onPress, onStatusChange }: TaskCardProp
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
-          <Clock size={16} color="#6B7280" />
+          <Clock size={16} color={colors.subtitle} />
           <Text style={[styles.dueDate, isOverdue() && styles.overdueDueDate]}>
             Due: {task.dueDate}
           </Text>
         </View>
 
         <View style={styles.detailRow}>
-          <Users size={16} color="#6B7280" />
+          <Users size={16} color={colors.subtitle} />
           <Text style={styles.assignee}>{task.assignee}</Text>
         </View>
 
         {task.field && (
           <View style={styles.detailRow}>
-            <MapPin size={16} color="#6B7280" />
+            <MapPin size={16} color={colors.subtitle} />
             <Text style={styles.field}>{task.field}</Text>
           </View>
         )}
@@ -95,7 +96,7 @@ export default function TaskCard({ task, onPress, onStatusChange }: TaskCardProp
 
       {isOverdue() && (
         <View style={styles.overdueAlert}>
-          <AlertTriangle size={16} color="#EF4444" />
+          <AlertTriangle size={16} color={colors.danger} />
           <Text style={styles.overdueText}>Overdue</Text>
         </View>
       )}
@@ -105,100 +106,100 @@ export default function TaskCard({ task, onPress, onStatusChange }: TaskCardProp
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
   },
   overdueCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#EF4444',
+    borderLeftColor: colors.danger,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   titleContainer: {
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   taskTitle: {
-    fontSize: 16,
+    fontSize: typography.fontSize.md,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   priorityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   priorityText: {
-    fontSize: 12,
+    fontSize: typography.fontSize.xs,
     fontWeight: '500',
-    marginLeft: 4,
+    marginLeft: spacing.xs,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.sm,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: typography.fontSize.xs,
     fontWeight: '500',
   },
   description: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 12,
+    fontSize: typography.fontSize.sm,
+    color: colors.subtitle,
+    marginBottom: spacing.md,
     lineHeight: 20,
   },
   details: {
-    gap: 8,
+    gap: spacing.sm,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dueDate: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 8,
+    fontSize: typography.fontSize.xs,
+    color: colors.subtitle,
+    marginLeft: spacing.xs,
   },
   overdueDueDate: {
-    color: '#EF4444',
+    color: colors.danger,
     fontWeight: '500',
   },
   assignee: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 8,
+    fontSize: typography.fontSize.xs,
+    color: colors.subtitle,
+    marginLeft: spacing.xs,
   },
   field: {
-    fontSize: 12,
-    color: '#3B82F6',
-    marginLeft: 8,
+    fontSize: typography.fontSize.xs,
+    color: colors.secondary,
+    marginLeft: spacing.xs,
   },
   overdueAlert: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: '#FEE2E2',
   },
   overdueText: {
-    fontSize: 12,
+    fontSize: typography.fontSize.xs,
     fontWeight: '500',
-    color: '#EF4444',
-    marginLeft: 4,
+    color: colors.danger,
+    marginLeft: spacing.xs,
   },
 });

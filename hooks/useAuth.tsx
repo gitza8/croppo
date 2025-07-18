@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole, AuthState, LoginRequest, Permission, ROLE_PERMISSIONS } from '../types/auth';
 
 interface AuthContextType extends AuthState {
@@ -26,14 +26,12 @@ export const useAuthProvider = () => {
   });
 
   useEffect(() => {
-    // Check for existing session on app start
     checkExistingSession();
   }, []);
 
   const checkExistingSession = async () => {
     try {
-      // In a real app, this would check for stored token and validate it
-      // For now, we'll simulate with a default admin user
+      // Simulate a default admin user
       const mockUser: User = {
         id: 1,
         email: 'admin@farm.com',
@@ -43,7 +41,6 @@ export const useAuthProvider = () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-
       setAuthState({
         user: mockUser,
         isAuthenticated: true,
@@ -61,7 +58,6 @@ export const useAuthProvider = () => {
   const login = async (credentials: LoginRequest) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
-      
       // Mock login - in real app, this would call the API
       const mockUsers: User[] = [
         {
@@ -101,13 +97,10 @@ export const useAuthProvider = () => {
           updatedAt: new Date().toISOString(),
         },
       ];
-
       const user = mockUsers.find(u => u.email === credentials.email);
-      
       if (!user) {
         throw new Error('Invalid credentials');
       }
-
       setAuthState({
         user,
         isAuthenticated: true,
@@ -133,15 +126,12 @@ export const useAuthProvider = () => {
 
   const hasPermission = (module: string, action: string): boolean => {
     if (!authState.user) return false;
-    
     const userPermissions = ROLE_PERMISSIONS[authState.user.role];
-    
     // Check for wildcard permissions (Admin)
     const wildcardPermission = userPermissions.find(
       p => p.module === '*' && p.action === action
     );
     if (wildcardPermission?.allowed) return true;
-    
     // Check for specific module permissions
     const modulePermission = userPermissions.find(
       p => p.module === module && p.action === action
@@ -162,4 +152,15 @@ export const useAuthProvider = () => {
   };
 };
 
-export { AuthContext };
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const value = useAuthProvider();
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+} 

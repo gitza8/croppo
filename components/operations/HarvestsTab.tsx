@@ -184,22 +184,14 @@ export default function HarvestsTab({ operationsData }: HarvestsTabProps) {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingHarvest ? 'Edit Harvest' : 'Add Harvest'}
+                {editingHarvest ? 'Edit Harvest' : 'Schedule Harvest'}
               </Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <X size={24} color="#6B7280" />
+                <Text style={{ color: '#3B82F6', fontSize: 16 }}>Cancel</Text>
               </TouchableOpacity>
             </View>
-
             <ScrollView style={styles.modalContent}>
-              <FormField
-                label="Date"
-                value={formData.date}
-                onChangeText={(text) => setFormData({ ...formData, date: text })}
-                placeholder="YYYY-MM-DD"
-                required
-              />
-
+              <Text style={styles.sectionHeader}>Select Field *</Text>
               <Dropdown
                 label="Field"
                 options={fieldOptions}
@@ -208,7 +200,7 @@ export default function HarvestsTab({ operationsData }: HarvestsTabProps) {
                 placeholder="Select field"
                 required
               />
-
+              <Text style={styles.sectionHeader}>Select Crop</Text>
               <Dropdown
                 label="Crop"
                 options={cropOptions}
@@ -216,33 +208,36 @@ export default function HarvestsTab({ operationsData }: HarvestsTabProps) {
                 onSelect={(value) => setFormData({ ...formData, cropId: value })}
                 placeholder="Select crop"
               />
-
+              <Text style={styles.sectionHeader}>Harvest Details</Text>
               <FormField
-                label="Yield (tonnes)"
+                label="Date"
+                value={formData.date}
+                onChangeText={(text) => setFormData({ ...formData, date: text })}
+                placeholder="YYYY-MM-DD"
+                required
+              />
+              <FormField
+                label="Yield"
                 value={formData.yield}
                 onChangeText={(text) => setFormData({ ...formData, yield: text })}
-                placeholder="Enter yield in tonnes"
+                placeholder="Enter yield"
                 keyboardType="numeric"
                 required
               />
-
               <FormField
                 label="Moisture (%)"
                 value={formData.moisture}
                 onChangeText={(text) => setFormData({ ...formData, moisture: text })}
-                placeholder="Enter moisture percentage"
+                placeholder="Enter moisture content"
                 keyboardType="numeric"
               />
-
               <Dropdown
                 label="Grade"
                 options={gradeOptions}
                 value={formData.grade}
                 onSelect={(value) => setFormData({ ...formData, grade: value })}
                 placeholder="Select grade"
-                required
               />
-
               <FormField
                 label="Operator"
                 value={formData.operator}
@@ -250,14 +245,12 @@ export default function HarvestsTab({ operationsData }: HarvestsTabProps) {
                 placeholder="Enter operator name"
                 required
               />
-
               <FormField
-                label="Weather Conditions"
+                label="Weather"
                 value={formData.weather}
                 onChangeText={(text) => setFormData({ ...formData, weather: text })}
                 placeholder="Enter weather conditions"
               />
-
               <FormField
                 label="Quality Notes"
                 value={formData.qualityNotes}
@@ -266,7 +259,6 @@ export default function HarvestsTab({ operationsData }: HarvestsTabProps) {
                 multiline
               />
             </ScrollView>
-
             <View style={styles.modalActions}>
               <TouchableOpacity 
                 style={styles.cancelButton} 
@@ -413,5 +405,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 20,
+    marginBottom: 8,
   },
 });
