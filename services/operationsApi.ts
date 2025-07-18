@@ -10,7 +10,18 @@ import {
   Task, 
   IPMRecord, 
   BatchOperation,
-  InventoryTransaction 
+  InventoryTransaction,
+  InventoryMovement,
+  InventoryItem,
+  FinancialTransaction,
+  DashboardMetrics,
+  Alert,
+  TreatmentSchedule,
+  FertilizerPlan,
+  IrrigationEvent,
+  SensorData,
+  ReportConfig,
+  AuditLog
 } from '../types/operations';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -327,6 +338,176 @@ class OperationsAPI {
 
   async getInventoryTransactions(): Promise<InventoryTransaction[]> {
     return this.request<InventoryTransaction[]>('/inventory/transactions');
+  }
+
+  // PRD-specified Dashboard API
+  async getDashboardMetrics(): Promise<DashboardMetrics> {
+    return this.request<DashboardMetrics>('/dashboard');
+  }
+
+  // PRD-specified Alerts API
+  async getAlerts(): Promise<Alert[]> {
+    return this.request<Alert[]>('/alerts');
+  }
+
+  // PRD-specified Inventory Movements API
+  async getInventoryMovements(): Promise<InventoryMovement[]> {
+    return this.request<InventoryMovement[]>('/inventory/movements');
+  }
+
+  async createInventoryMovement(movement: Omit<InventoryMovement, 'id'>): Promise<InventoryMovement> {
+    return this.request<InventoryMovement>('/inventory/movements', {
+      method: 'POST',
+      body: JSON.stringify(movement),
+    });
+  }
+
+  // PRD-specified Financial Transactions API
+  async getFinancialTransactions(): Promise<FinancialTransaction[]> {
+    return this.request<FinancialTransaction[]>('/transactions');
+  }
+
+  async createFinancialTransaction(transaction: Omit<FinancialTransaction, 'id'>): Promise<FinancialTransaction> {
+    return this.request<FinancialTransaction>('/transactions', {
+      method: 'POST',
+      body: JSON.stringify(transaction),
+    });
+  }
+
+  async reconcileTransaction(id: number): Promise<FinancialTransaction> {
+    return this.request<FinancialTransaction>(`/transactions/${id}/reconcile`, {
+      method: 'PATCH',
+    });
+  }
+
+  // PRD-specified Treatment Schedules API
+  async getTreatmentSchedules(): Promise<TreatmentSchedule[]> {
+    return this.request<TreatmentSchedule[]>('/treatments');
+  }
+
+  async createTreatmentSchedule(schedule: Omit<TreatmentSchedule, 'id'>): Promise<TreatmentSchedule> {
+    return this.request<TreatmentSchedule>('/treatments', {
+      method: 'POST',
+      body: JSON.stringify(schedule),
+    });
+  }
+
+  async exportTreatmentHistory(format: 'pdf' | 'excel' | 'csv', fields?: string[]): Promise<Blob> {
+    const params = new URLSearchParams();
+    params.append('format', format);
+    if (fields) {
+      params.append('fields', fields.join(','));
+    }
+    
+    return this.request<Blob>(`/treatments/export?${params.toString()}`);
+  }
+
+  // PRD-specified Fertilizer Plans API
+  async getFertilizerPlans(): Promise<FertilizerPlan[]> {
+    return this.request<FertilizerPlan[]>('/fertilizations/plans');
+  }
+
+  async createFertilizerPlan(plan: Omit<FertilizerPlan, 'id'>): Promise<FertilizerPlan> {
+    return this.request<FertilizerPlan>('/fertilizations/plans', {
+      method: 'POST',
+      body: JSON.stringify(plan),
+    });
+  }
+
+  async importSoilTest(file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return this.request<any>('/soiltests', {
+      method: 'POST',
+      body: formData,
+      headers: {}, // Remove Content-Type to let browser set it for FormData
+    });
+  }
+
+  // PRD-specified Irrigation Events API
+  async getIrrigationEvents(): Promise<IrrigationEvent[]> {
+    return this.request<IrrigationEvent[]>('/irrigations');
+  }
+
+  async createIrrigationEvent(event: Omit<IrrigationEvent, 'id'>): Promise<IrrigationEvent> {
+    return this.request<IrrigationEvent>('/irrigations', {
+      method: 'POST',
+      body: JSON.stringify(event),
+    });
+  }
+
+  async overrideIrrigationEvent(id: number): Promise<IrrigationEvent> {
+    return this.request<IrrigationEvent>(`/irrigations/${id}/override`, {
+      method: 'PATCH',
+    });
+  }
+
+  async getSensorData(irrigationEventId: number): Promise<SensorData[]> {
+    return this.request<SensorData[]>(`/irrigations/${irrigationEventId}/sensors`);
+  }
+
+  // PRD-specified Reports API
+  async getReportConfigs(): Promise<ReportConfig[]> {
+    return this.request<ReportConfig[]>('/reports');
+  }
+
+  async generateReport(config: Omit<ReportConfig, 'id'>): Promise<any> {
+    return this.request<any>('/reports/generate', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    });
+  }
+
+  async previewReport(id: number): Promise<Blob> {
+    return this.request<Blob>(`/reports/${id}/preview`);
+  }
+
+  async scheduleReport(config: ReportConfig): Promise<ReportConfig> {
+    return this.request<ReportConfig>('/reports/schedules', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    });
+  }
+
+  // PRD-specified Audit Logs API
+  async getAuditLogs(): Promise<AuditLog[]> {
+    return this.request<AuditLog[]>('/audit');
+  }
+
+  async createAuditLog(log: Omit<AuditLog, 'id'>): Promise<AuditLog> {
+    return this.request<AuditLog>('/audit', {
+      method: 'POST',
+      body: JSON.stringify(log),
+    });
+  }
+
+  // PRD-specified Ledger API
+  async getLedger(account?: string, from?: string, to?: string): Promise<any> {
+    const params = new URLSearchParams();
+    if (account) params.append('account', account);
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    
+    return this.request<any>(`/ledger?${params.toString()}`);
+  }
+
+  // PRD-specified Task completion workflow
+  async completeTask(id: number): Promise<Task> {
+    return this.request<Task>(`/tasks/${id}/complete`, {
+      method: 'PATCH',
+    });
+  }
+
+  // PRD-specified filtered queries
+  async getTasksFiltered(field?: string, type?: string, dateFrom?: string, dateTo?: string): Promise<Task[]> {
+    const params = new URLSearchParams();
+    if (field) params.append('field', field);
+    if (type) params.append('type', type);
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    
+    return this.request<Task[]>(`/tasks?${params.toString()}`);
   }
 }
 

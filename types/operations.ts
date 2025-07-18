@@ -108,6 +108,7 @@ export interface Treatment {
   temperature?: number;
   humidity?: number;
   attachments: string[];
+  taskId?: number; // Link to Task as per PRD
   createdAt?: string;
   updatedAt?: string;
 }
@@ -132,6 +133,7 @@ export interface Fertilization {
   expectedResponse?: string;
   actualResponse?: string;
   attachments: string[];
+  taskId?: number; // Link to Task as per PRD
   createdAt?: string;
   updatedAt?: string;
 }
@@ -152,6 +154,10 @@ export interface Irrigation {
   energyCost?: number;
   efficiency?: number;
   weatherConditions?: string;
+  taskId?: number; // Link to Task as per PRD
+  sensorThreshold?: number; // As per PRD irrigation scheduler
+  scheduledStartTime?: string;
+  manualOverride?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -160,7 +166,11 @@ export interface Task {
   id: number;
   title: string;
   description: string;
+  type: 'Treatment' | 'Fertilization' | 'Irrigation' | 'Planting' | 'Harvest' | 'Custom';
   dueDate: string;
+  dateStart?: string;
+  dateEnd?: string;
+  assignedUserId?: number; // User assignment as per PRD
   assignee: string;
   status: 'To Do' | 'In Progress' | 'Done';
   priority: 'High' | 'Medium' | 'Low';
@@ -220,6 +230,73 @@ export interface BatchOperation {
   updatedAt?: string;
 }
 
+// PRD-specified InventoryMovement entity
+export interface InventoryMovement {
+  id: number;
+  inventoryItemId: number;
+  itemName: string;
+  movementType: 'in' | 'out' | 'adjustment';
+  quantity: number;
+  unit: string;
+  cost?: number;
+  reason: string;
+  operator: string;
+  date: string;
+  batchNumber?: string;
+  expiryDate?: string;
+  supplier?: string;
+  invoiceNumber?: string;
+  taskId?: number; // Link to Task as per PRD
+  treatmentId?: number; // Link to Treatment
+  fertilizationId?: number; // Link to Fertilization
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Enhanced InventoryItem with PRD requirements
+export interface InventoryItem {
+  id: number;
+  name: string;
+  category: 'fertilizer' | 'pesticide' | 'seed' | 'equipment' | 'other';
+  currentStock: number;
+  unit: string;
+  reorderThreshold: number;
+  reorderQuantity: number;
+  costPerUnit: number;
+  totalValue: number;
+  supplier?: string;
+  barcode?: string;
+  location?: string;
+  msdsInfo?: string; // MSDS information as per PRD
+  usageInstructions?: string; // Label info as per PRD
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// PRD-specified FinancialTransaction entity
+export interface FinancialTransaction {
+  id: number;
+  date: string;
+  type: 'expense' | 'income' | 'depreciation';
+  amount: number;
+  currency: string;
+  description: string;
+  account: string;
+  category: string;
+  taskId?: number; // Link to Task as per PRD
+  inventoryMovementId?: number; // Link to InventoryMovement as per PRD
+  treatmentId?: number;
+  fertilizationId?: number;
+  irrigationId?: number;
+  isReconciled: boolean;
+  reconciliationDate?: string;
+  attachments: string[];
+  createdBy: number; // User ID
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Legacy - keeping for backward compatibility
 export interface InventoryTransaction {
   id: number;
   itemId: number;
@@ -269,4 +346,149 @@ export interface SoilTest {
   reportUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// PRD-specified Dashboard KPI metrics
+export interface DashboardMetrics {
+  costPerHectare: number;
+  waterUsage: number;
+  completedTasks: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  activeFields: number;
+  overdueTasksCount: number;
+  lowStockItemsCount: number;
+  lastUpdated: string;
+}
+
+// PRD-specified Alert system
+export interface Alert {
+  id: number;
+  type: 'overdue_task' | 'low_stock' | 'system' | 'weather';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  message: string;
+  entityId?: number;
+  entityType?: string;
+  isRead: boolean;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+// PRD-specified Treatment Schedule
+export interface TreatmentSchedule {
+  id: number;
+  fieldIds: number[];
+  fieldNames: string[];
+  pesticideId: number;
+  pesticideName: string;
+  dosage: number;
+  unit: string;
+  scheduledDate: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  createdBy: number;
+  notes?: string;
+  weatherConditions?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// PRD-specified Fertilizer Plan
+export interface FertilizerPlan {
+  id: number;
+  fieldId: number;
+  fieldName: string;
+  soilTestId?: number;
+  recommendedNPK: {
+    nitrogen: number;
+    phosphorus: number;
+    potassium: number;
+  };
+  plannedApplications: {
+    date: string;
+    fertilizerId: number;
+    fertilizerName: string;
+    rate: number;
+    unit: string;
+    cost: number;
+  }[];
+  totalCost: number;
+  status: 'draft' | 'approved' | 'in_progress' | 'completed';
+  createdBy: number;
+  approvedBy?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// PRD-specified Irrigation Event
+export interface IrrigationEvent {
+  id: number;
+  fieldId: number;
+  fieldName: string;
+  startTime: string;
+  duration: number; // in minutes
+  sensorThreshold?: number;
+  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
+  actualStartTime?: string;
+  actualDuration?: number;
+  waterApplied?: number;
+  energyCost?: number;
+  manualOverride: boolean;
+  createdBy: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// PRD-specified Sensor Data
+export interface SensorData {
+  id: number;
+  irrigationEventId: number;
+  sensorType: 'soil_moisture' | 'temperature' | 'humidity' | 'flow_rate';
+  value: number;
+  unit: string;
+  timestamp: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+// PRD-specified Report Configuration
+export interface ReportConfig {
+  id: number;
+  name: string;
+  type: 'custom' | 'template';
+  modules: string[];
+  fields: string[];
+  filters: {
+    dateFrom?: string;
+    dateTo?: string;
+    fieldIds?: number[];
+    [key: string]: any;
+  };
+  format: 'pdf' | 'excel' | 'csv';
+  isScheduled: boolean;
+  schedule?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    recipients: string[];
+    nextRun?: string;
+  };
+  createdBy: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// PRD-specified Audit Log
+export interface AuditLog {
+  id: number;
+  userId: number;
+  userName: string;
+  action: 'create' | 'update' | 'delete';
+  entityType: string;
+  entityId: number;
+  changes?: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp: string;
 }

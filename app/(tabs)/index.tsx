@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Calendar, CircleCheck as CheckCircle, Clock, TrendingUp, TriangleAlert as AlertTriangle, Users } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, RefreshControl } from 'react-native';
+import { Calendar, CircleCheck as CheckCircle, Clock, TrendingUp, TriangleAlert as AlertTriangle, Users, Droplets, DollarSign, Sprout, Package } from 'lucide-react-native';
 import { useOperations } from '@/hooks/useOperations';
+import { useAuth } from '@/hooks/useAuth';
+import { DashboardMetrics, Alert } from '@/types/operations';
 
 export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const [refreshing, setRefreshing] = useState(false);
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  
   const operationsData = useOperations();
+  const { user, hasPermission } = useAuth();
 
   const { 
     farms, 
@@ -20,31 +27,102 @@ export default function Dashboard() {
     getTasksByStatus 
   } = operationsData;
 
-  // Calculate summary data from actual operations
-  const summaryData = [
+  useEffect(() => {
+    loadDashboardData();
+  }, [selectedPeriod]);
+
+  const loadDashboardData = async () => {
+    try {
+      // In real app, this would call GET /api/dashboard
+      const mockMetrics: DashboardMetrics = {
+        costPerHectare: 850.75,
+        waterUsage: 12500, // liters
+        completedTasks: getTasksByStatus('Done').length,
+        totalRevenue: 65000,
+        totalExpenses: 18400,
+        netProfit: 46600,
+        activeFields: fields.length,
+        overdueTasksCount: getOverdueTasks().length,
+        lowStockItemsCount: 3, // Mock data
+        lastUpdated: new Date().toISOString(),
+      };
+      setDashboardMetrics(mockMetrics);
+
+      // Mock alerts
+      const mockAlerts: Alert[] = [
+        {
+          id: 1,
+          type: 'overdue_task',
+          severity: 'high',
+          title: 'Overdue Task',
+          message: 'Field A fertilization is 2 days overdue',
+          entityId: 1,
+          entityType: 'task',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 2,
+          type: 'low_stock',
+          severity: 'medium',
+          title: 'Low Stock Alert',
+          message: 'Organic Pesticide BT is below reorder threshold',
+          entityId: 2,
+          entityType: 'inventory',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 3,
+          type: 'weather',
+          severity: 'low',
+          title: 'Weather Alert',
+          message: 'Rain expected tomorrow - consider postponing spraying',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        },
+      ];
+      setAlerts(mockAlerts);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
+  };
+
+  // PRD-specified KPI widgets
+  const kpiWidgets = [
+    { 
+      title: 'Cost/Hectare', 
+      value: dashboardMetrics ? `$${dashboardMetrics.costPerHectare.toFixed(2)}` : '--', 
+      icon: 'dollarsign', 
+      color: '#10B981',
+      change: '+5.2%'
+    },
+    { 
+      title: 'Water Usage', 
+      value: dashboardMetrics ? `${(dashboardMetrics.waterUsage / 1000).toFixed(1)}K L` : '--', 
+      icon: 'droplets', 
+      color: '#3B82F6',
+      change: '-8.1%'
+    },
+    { 
+      title: 'Completed Tasks', 
+      value: dashboardMetrics ? dashboardMetrics.completedTasks.toString() : '--', 
+      icon: 'checkcircle', 
+      color: '#10B981',
+      change: '+12.3%'
+    },
     { 
       title: 'Active Fields', 
-      value: fields.length.toString(), 
-      icon: 'field', 
-      color: '#10B981' 
-    },
-    { 
-      title: 'Pending Tasks', 
-      value: getTasksByStatus('To Do').length.toString(), 
-      icon: 'tasks', 
-      color: '#F59E0B' 
-    },
-    { 
-      title: 'Recent Operations', 
-      value: (plantings.length + harvests.length + treatments.length + fertilizations.length + irrigations.length).toString(), 
-      icon: 'operations', 
-      color: '#3B82F6' 
-    },
-    { 
-      title: 'Overdue Tasks', 
-      value: getOverdueTasks().length.toString(), 
-      icon: 'inventory', 
-      color: '#EF4444' 
+      value: dashboardMetrics ? dashboardMetrics.activeFields.toString() : '--', 
+      icon: 'sprout', 
+      color: '#F59E0B',
+      change: '0%'
     },
   ];
 
@@ -85,20 +163,58 @@ export default function Dashboard() {
     })),
   ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 4);
 
-  const renderSummaryCard = (item: any, index: number) => (
-    <View key={index} style={styles.summaryCard}>
-      <View style={[styles.iconContainer, { backgroundColor: item.color + '20' }]}>
-        {item.icon === 'field' && <Calendar size={24} color={item.color} />}
-        {item.icon === 'tasks' && <Clock size={24} color={item.color} />}
-        {item.icon === 'operations' && <CheckCircle size={24} color={item.color} />}
-        {item.icon === 'inventory' && <AlertTriangle size={24} color={item.color} />}
+  const renderKPIWidget = (item: any, index: number) => (
+    <View key={index} style={styles.kpiCard}>
+      <View style={styles.kpiHeader}>
+        <View style={[styles.kpiIcon, { backgroundColor: item.color }]}>
+          {item.icon === 'dollarsign' && <DollarSign size={20} color="#FFFFFF" />}
+          {item.icon === 'droplets' && <Droplets size={20} color="#FFFFFF" />}
+          {item.icon === 'checkcircle' && <CheckCircle size={20} color="#FFFFFF" />}
+          {item.icon === 'sprout' && <Sprout size={20} color="#FFFFFF" />}
+        </View>
+        <View style={styles.kpiValues}>
+          <Text style={styles.kpiValue}>{item.value}</Text>
+          <Text style={[styles.kpiChange, { color: item.change.startsWith('+') ? '#10B981' : item.change.startsWith('-') ? '#EF4444' : '#6B7280' }]}>
+            {item.change}
+          </Text>
+        </View>
       </View>
-      <View style={styles.summaryContent}>
-        <Text style={styles.summaryValue}>{item.value}</Text>
-        <Text style={styles.summaryTitle}>{item.title}</Text>
-      </View>
+      <Text style={styles.kpiTitle}>{item.title}</Text>
     </View>
   );
+
+  const renderAlert = (alert: Alert) => (
+    <TouchableOpacity 
+      key={alert.id} 
+      style={[styles.alertCard, { borderLeftColor: getSeverityColor(alert.severity) }]}
+      onPress={() => handleAlertPress(alert)}
+    >
+      <View style={styles.alertHeader}>
+        <View style={styles.alertIcon}>
+          {alert.type === 'overdue_task' && <Clock size={16} color={getSeverityColor(alert.severity)} />}
+          {alert.type === 'low_stock' && <Package size={16} color={getSeverityColor(alert.severity)} />}
+          {alert.type === 'weather' && <AlertTriangle size={16} color={getSeverityColor(alert.severity)} />}
+        </View>
+        <Text style={styles.alertTitle}>{alert.title}</Text>
+      </View>
+      <Text style={styles.alertMessage}>{alert.message}</Text>
+    </TouchableOpacity>
+  );
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return '#DC2626';
+      case 'high': return '#EF4444';
+      case 'medium': return '#F59E0B';
+      case 'low': return '#3B82F6';
+      default: return '#6B7280';
+    }
+  };
+
+  const handleAlertPress = (alert: Alert) => {
+    // In real app, this would navigate to the relevant module with filter
+    console.log('Alert pressed:', alert);
+  };
 
   const renderTaskRow = (task: any) => (
     <View key={task.id} style={styles.taskRow}>
@@ -135,16 +251,47 @@ export default function Dashboard() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#10B981']}
+            tintColor="#10B981"
+          />
+        }
+      >
         <View style={styles.header}>
-          <Text style={styles.title}>Farm Dashboard</Text>
-          <Text style={styles.subtitle}>Welcome back! Here's your farm overview</Text>
+          <View>
+            <Text style={styles.title}>Farm Dashboard</Text>
+            <Text style={styles.subtitle}>Welcome back, {user?.name || 'User'}!</Text>
+          </View>
+          <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
+            <Text style={styles.refreshButtonText}>Refresh</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Summary Cards */}
-        <View style={styles.summaryContainer}>
-          {summaryData.map((item, index) => renderSummaryCard(item, index))}
+        {/* KPI Widgets */}
+        <View style={styles.kpiContainer}>
+          {kpiWidgets.map((item, index) => renderKPIWidget(item, index))}
         </View>
+
+        {/* Alerts Panel */}
+        {alerts.length > 0 && (
+          <View style={styles.alertsSection}>
+            <Text style={styles.sectionTitle}>Alerts</Text>
+            <View style={styles.alertsContainer}>
+              {alerts.slice(0, 3).map(renderAlert)}
+              {alerts.length > 3 && (
+                <TouchableOpacity style={styles.viewAllAlertsButton}>
+                  <Text style={styles.viewAllAlertsText}>View All Alerts ({alerts.length})</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Charts Section */}
         <View style={styles.chartSection}>
@@ -174,7 +321,7 @@ export default function Dashboard() {
             <TrendingUp size={48} color="#10B981" />
             <Text style={styles.chartPlaceholderText}>Operations Trend</Text>
             <Text style={styles.chartPlaceholderSubtext}>
-              {summaryData[2].value} operations this {selectedPeriod}
+              {(plantings.length + harvests.length + treatments.length + fertilizations.length + irrigations.length)} operations this {selectedPeriod}
             </Text>
           </View>
         </View>
@@ -251,6 +398,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -266,18 +416,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
   },
-  summaryContainer: {
+  refreshButton: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  refreshButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  kpiContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     padding: 16,
     gap: 12,
   },
-  summaryCard: {
+  kpiCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
     width: '47%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -285,26 +444,86 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  kpiHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  kpiIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
-  summaryContent: {
-    flex: 1,
+  kpiValues: {
+    alignItems: 'flex-end',
   },
-  summaryValue: {
-    fontSize: 24,
+  kpiValue: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#111827',
   },
-  summaryTitle: {
+  kpiChange: {
     fontSize: 12,
-    color: '#6B7280',
+    fontWeight: '600',
     marginTop: 2,
+  },
+  kpiTitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  alertsSection: {
+    margin: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  alertsContainer: {
+    marginTop: 12,
+  },
+  alertCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+  },
+  alertHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  alertIcon: {
+    marginRight: 8,
+  },
+  alertTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  alertMessage: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  viewAllAlertsButton: {
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  viewAllAlertsText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   chartSection: {
     margin: 16,
