@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { ChartBar as BarChart3, Sprout, Package, DollarSign, FileText } from 'lucide-react-native';
+import { ChartBar as BarChart3, Sprout, Package, DollarSign, FileText, Bug } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -37,6 +37,15 @@ export default function TabLayout() {
           title: 'Operations',
           tabBarIcon: ({ size, color }) => (
             <Sprout size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="treatments"
+        options={{
+          title: 'Treatments',
+          tabBarIcon: ({ size, color }) => (
+            <Bug size={size} color={color} />
           ),
         }}
       />
